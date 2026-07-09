@@ -19,8 +19,10 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// TODO: mount controllers here, e.g.:
-// app.use("/api/users", require("./controllers/userController"));
+// Auth routes
+const { validate, registerSchema } = require("./middlewares/validateMiddleware");
+const authController = require("./controllers/authController");
+app.post("/api/auth/register", validate(registerSchema), authController.register);
 
 // Error handling (last)
 app.use(notFound);
