@@ -10,18 +10,29 @@
 
 <nav id="navbar"></nav>
 
-<div class="page-container">
-  <h1>Welcome to CoWork</h1>
-  <p style="color: var(--text-secondary); margin-top:8px">Your campus food ordering platform.</p>
-</div>
+<main class="page-container">
+
+  <section class="menu-header">
+    <h1>Browse Menu</h1>
+    <p>Discover delicious food from campus stalls</p>
+
+    <div class="menu-toolbar">
+      <label class="filter-label" for="cuisineFilter">Cuisine</label>
+      <select id="cuisineFilter" class="form-select filter-select">
+        <option value="">All Cuisines</option>
+      </select>
+    </div>
+  </section>
+
+  <section id="menuContent" class="menu-content">
+    <div class="loading">Loading menu&hellip;</div>
+  </section>
+
+</main>
 
 <script src="/js/api.js"></script>
 <script src="/js/auth.js"></script>
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    renderNavbar();
-  });
-</script>
+<script src="/js/index.js"></script>
 
 </body>
 </html>

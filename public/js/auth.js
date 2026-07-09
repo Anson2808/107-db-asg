@@ -49,11 +49,13 @@ function renderNavbar() {
     }
     leftLinks += `<a href="/order-history.html">Order History</a>`;
     rightLinks = `
+      <a href="/cart.html">Cart <span id="cart-badge" class="badge cart-badge-nav" style="display:none">0</span></a>
       <span class="navbar-user">${escapeHtml(user.username)}</span>
       <button onclick="logout()">Logout</button>
     `;
   } else {
     rightLinks = `
+      <a href="/cart.html">Cart <span id="cart-badge" class="badge cart-badge-nav" style="display:none">0</span></a>
       <a href="/login.html">Login</a>
       <a href="/register.html" class="btn-primary">Register</a>
     `;
@@ -70,10 +72,34 @@ function renderNavbar() {
       </div>
     </div>
   `;
+
+  updateCartBadge();
 }
 
 function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
+}
+
+/**
+ * Reads freshbite_cart from localStorage and updates the cart badge
+ * in the navbar to show the total quantity.  Call this after any
+ * add/remove/clear to keep the badge in sync.
+ */
+function updateCartBadge() {
+  const badge = document.getElementById("cart-badge");
+  if (!badge) return;
+
+  let totalQty = 0;
+  try {
+    const raw = localStorage.getItem("freshbite_cart");
+    const cart = raw ? JSON.parse(raw) : [];
+    totalQty = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
+  } catch (e) {
+    totalQty = 0;
+  }
+
+  badge.textContent = totalQty;
+  badge.style.display = totalQty > 0 ? "" : "none";
 }

@@ -11,13 +11,20 @@
 <nav id="navbar"></nav>
 
 <div class="page-container">
-  <h1 style="font-size:24px; font-weight:700; margin-bottom:24px">Order History</h1>
+  <h1 style="font-size:24px; font-weight:700; margin-bottom:16px">Order History</h1>
 
-  <div id="loadingState" class="loading">Loading orders...</div>
+  <div id="controlsBar" class="controls-bar" style="display:none">
+    <div class="controls-row" id="controlsRow"></div>
+  </div>
+
+  <div id="loadingState" class="loading">Loading orders&hellip;</div>
   <div id="orderList"></div>
   <div id="emptyState" class="empty-state" style="display:none">
     <p>No orders yet.</p>
     <a href="/" class="btn btn-primary" style="margin-top:12px">Browse Stalls</a>
+  </div>
+  <div id="noMatchState" class="empty-state" style="display:none">
+    <p>No orders match the selected filters.</p>
   </div>
 </div>
 
