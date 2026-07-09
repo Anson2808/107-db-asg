@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics — CoWork</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<nav id="navbar"></nav>
+
+<div class="page-container">
+  <div id="toastContainer" class="toast-container"></div>
+
+  <div id="loadingState" class="loading">Loading analytics...</div>
+
+  <div id="analyticsContent" style="display:none">
+    <!-- Stat Cards -->
+    <div class="stall-grid stats-row">
+      <div class="stall-stat">
+        <div class="stall-stat-label">Total Orders</div>
+        <div class="stall-stat-value" id="statTotalOrders">0</div>
+      </div>
+      <div class="stall-stat">
+        <div class="stall-stat-label">Total Revenue</div>
+        <div class="stall-stat-value" id="statTotalRevenue">$0.00</div>
+      </div>
+      <div class="stall-stat">
+        <div class="stall-stat-label">Average Rating</div>
+        <div class="stall-stat-value" id="statAvgRating">—</div>
+      </div>
+    </div>
+
+    <!-- Chart 1: Revenue by Day -->
+    <div class="card">
+      <h2 class="card-title" style="margin-bottom:16px">Revenue by Day (Last 30 Days)</h2>
+      <div class="chart-wrapper">
+        <canvas id="revenueChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Chart 2 + 3 side by side -->
+    <div class="chart-grid">
+      <!-- Chart 2: Popular Items -->
+      <div class="card">
+        <h2 class="card-title" style="margin-bottom:16px">Most Popular Items</h2>
+        <div class="chart-wrapper">
+          <canvas id="popularItemsChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 3: Rating Trend -->
+      <div class="card">
+        <h2 class="card-title" style="margin-bottom:16px">Average Rating Trend</h2>
+        <div class="chart-wrapper">
+          <canvas id="ratingTrendChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/stall-analytics.js"></script>
+
+</body>
+</html>

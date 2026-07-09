@@ -237,3 +237,90 @@ INSERT INTO dbo.Inspections (StallId, InspectionDate, Score, Grade, ViolationCat
 (3, '2026-04-02', 79, 'C', 'Hygiene',                 'Food handler without hair restraint. Staff retraining required.'),
 (3, '2026-05-18', 87, 'B', 'Temperature',              'Chiller back in range. Minor labelling gaps on prepped containers.'),
 (3, '2026-06-20', 93, 'A', NULL,                       'Excellent turnaround. All documentation and hygiene on point.');
+
+-- ============================================================
+-- SEED: Orders (10–15 across stalls, June–July 2026)
+-- ============================================================
+INSERT INTO dbo.Orders (UserId, Subtotal, PackagingFee, DeliveryFee, Total, Status, EstReadyMinutes, CreatedAt) VALUES
+-- Stall 1 — Roti John Express
+(4, 11.50, 0.60, 2.50, 14.60, 'Paid',       20, '2026-06-25T12:30:00'),
+(5, 15.00, 0.60, 2.50, 18.10, 'Completed',  18, '2026-06-28T13:15:00'),
+(4,  9.50, 0.60, 2.50, 12.60, 'Paid',       22, '2026-07-01T11:45:00'),
+(5, 14.50, 0.60, 2.50, 17.60, 'Completed',  15, '2026-07-03T12:00:00'),
+(4, 10.00, 0.60, 2.50, 13.10, 'Paid',       25, '2026-07-06T14:20:00'),
+-- Stall 2 — Wok & Roll
+(5, 14.00, 0.60, 2.50, 17.10, 'Completed',  20, '2026-06-22T12:10:00'),
+(4, 10.50, 0.60, 2.50, 13.60, 'Paid',       18, '2026-06-27T13:30:00'),
+(5, 15.00, 0.60, 2.50, 18.10, 'Paid',       22, '2026-07-02T11:50:00'),
+(4, 13.00, 0.60, 2.50, 16.10, 'Completed',  16, '2026-07-05T12:40:00'),
+(5,  7.50, 0.60, 2.50, 10.60, 'Paid',       20, '2026-07-07T13:00:00'),
+-- Stall 3 — Spice Garden
+(4, 14.00, 0.60, 2.50, 17.10, 'Completed',  25, '2026-06-24T12:00:00'),
+(5, 17.00, 0.60, 2.50, 20.10, 'Paid',       20, '2026-06-29T13:45:00'),
+(4, 11.50, 0.60, 2.50, 14.60, 'Paid',       22, '2026-07-03T11:30:00'),
+(5, 11.00, 0.60, 2.50, 14.10, 'Completed',  18, '2026-07-06T12:15:00'),
+(4, 14.50, 0.60, 2.50, 17.60, 'Paid',       20, '2026-07-08T12:50:00');
+
+-- ============================================================
+-- SEED: OrderItems (line items for the orders above)
+-- ============================================================
+INSERT INTO dbo.OrderItems (OrderId, MenuItemId, StallId, ItemName, UnitPrice, Quantity) VALUES
+-- Order 1 (Stall 1 — Roti John Express)
+(1,  1, 1, 'Classic Roti John',  6.50, 1),
+(1,  6, 1, 'Teh Tarik',          2.50, 2),
+-- Order 2 (Stall 1)
+(2,  3, 1, 'Cheese Roti John',   7.50, 2),
+-- Order 3 (Stall 1)
+(3,  2, 1, 'Chicken Roti John',  6.00, 1),
+(3,  5, 1, 'Curry Puff (2 pcs)', 3.50, 1),
+-- Order 4 (Stall 1)
+(4,  1, 1, 'Classic Roti John',  6.50, 1),
+(4,  4, 1, 'Mutton Kebab Wrap',  8.00, 1),
+-- Order 5 (Stall 1)
+(5,  3, 1, 'Cheese Roti John',   7.50, 1),
+(5,  6, 1, 'Teh Tarik',          2.50, 1),
+-- Order 6 (Stall 2 — Wok & Roll)
+(6,  7, 2, 'Char Kway Teow',     7.00, 2),
+-- Order 7 (Stall 2)
+(7,  8, 2, 'Hokkien Mee',        7.50, 1),
+(7, 11, 2, 'Spring Rolls (4 pcs)',3.00, 1),
+-- Order 8 (Stall 2)
+(8,  9, 2, 'Sweet & Sour Chicken Rice', 6.50, 2),
+(8, 12, 2, 'Iced Lemon Tea',     2.00, 1),
+-- Order 9 (Stall 2)
+(9, 10, 2, 'Wonton Noodle Soup', 6.00, 1),
+(9,  7, 2, 'Char Kway Teow',     7.00, 1),
+-- Order 10 (Stall 2)
+(10, 8, 2, 'Hokkien Mee',        7.50, 1),
+-- Order 11 (Stall 3 — Spice Garden)
+(11, 13, 3, 'Chicken Biryani',   9.00, 1),
+(11, 15, 3, 'Garlic Naan',       2.50, 2),
+-- Order 12 (Stall 3)
+(12, 14, 3, 'Butter Chicken',    8.50, 2),
+-- Order 13 (Stall 3)
+(13, 16, 3, 'Vegetable Samosa (3 pcs)', 4.00, 2),
+(13, 17, 3, 'Mango Lassi',       3.50, 1),
+-- Order 14 (Stall 3)
+(14, 13, 3, 'Chicken Biryani',   9.00, 1),
+(14, 18, 3, 'Masala Chai',       2.00, 1),
+-- Order 15 (Stall 3)
+(15, 14, 3, 'Butter Chicken',    8.50, 1),
+(15, 15, 3, 'Garlic Naan',       2.50, 1),
+(15, 17, 3, 'Mango Lassi',       3.50, 1);
+
+-- ============================================================
+-- SEED: Feedback (ratings across months for trend chart)
+-- ============================================================
+INSERT INTO dbo.Feedback (StallId, UserId, Rating, Comment, CreatedAt) VALUES
+-- Stall 1 — Roti John Express
+(1, 4, 4, 'Roti John was crispy and flavourful. Will order again!',    '2026-04-10T14:00:00'),
+(1, 5, 5, 'Best cheese roti john on campus. Quick delivery too.',      '2026-05-18T12:30:00'),
+(1, 4, 4, 'Consistently good. Teh tarik could be a bit sweeter.',      '2026-06-22T13:00:00'),
+-- Stall 2 — Wok & Roll
+(2, 5, 3, 'Char kway teow was a bit oily. Decent portion though.',     '2026-04-15T12:00:00'),
+(2, 4, 4, 'Hokkien mee was tasty and well-packed. Good value.',        '2026-05-22T13:30:00'),
+(2, 5, 5, 'Massive improvement! Wonton noodles were excellent.',       '2026-06-28T14:00:00'),
+-- Stall 3 — Spice Garden
+(3, 4, 4, 'Butter chicken was creamy and rich. Naan was perfect.',      '2026-04-08T12:00:00'),
+(3, 5, 3, 'Biryani was a bit dry. Portion size could be bigger.',       '2026-05-15T13:00:00'),
+(3, 4, 5, 'Best Indian food on campus! Mango lassi is a must-try.',     '2026-06-20T12:30:00');

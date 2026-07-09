@@ -32,4 +32,41 @@ const registerSchema = Joi.object({
   }),
 });
 
-module.exports = { validate, registerSchema };
+// Login schema
+const loginSchema = Joi.object({
+  username: Joi.string().required(),
+  password: Joi.string().required(),
+});
+
+// Update stall schema
+const updateStallSchema = Joi.object({
+  stallName: Joi.string().optional(),
+  description: Joi.string().allow("").optional(),
+  cuisineType: Joi.string().optional(),
+  status: Joi.string().valid("open", "closed").optional(),
+}).min(1);
+
+// Create menu item schema
+const createMenuItemSchema = Joi.object({
+  name: Joi.string().required(),
+  price: Joi.number().greater(0).required(),
+  description: Joi.string().allow("").optional(),
+  isAvailable: Joi.boolean().default(true).optional(),
+});
+
+// Update menu item schema
+const updateMenuItemSchema = Joi.object({
+  name: Joi.string().optional(),
+  price: Joi.number().greater(0).optional(),
+  description: Joi.string().allow("").optional(),
+  isAvailable: Joi.boolean().optional(),
+}).min(1);
+
+module.exports = {
+  validate,
+  registerSchema,
+  loginSchema,
+  updateStallSchema,
+  createMenuItemSchema,
+  updateMenuItemSchema,
+};

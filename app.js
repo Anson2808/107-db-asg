@@ -20,9 +20,38 @@ app.get("/api/health", (req, res) => {
 });
 
 // Auth routes
-const { validate, registerSchema } = require("./middlewares/validateMiddleware");
+const {
+  validate,
+  registerSchema,
+  loginSchema,
+  updateStallSchema,
+  createMenuItemSchema,
+  updateMenuItemSchema,
+} = require("./middlewares/validateMiddleware");
+const { verifyJWT, requireRole } = require("./middlewares/authMiddleware");
 const authController = require("./controllers/authController");
 app.post("/api/auth/register", validate(registerSchema), authController.register);
+app.post("/api/auth/login", validate(loginSchema), authController.login);
+
+// Stall routes (owner only)
+const stallController = require("./controllers/stallController");
+app.get("/api/stalls/my", verifyJWT, requireRole("stallOwner"), stallController.getMyStall);
+app.put("/api/stalls/my", verifyJWT, requireRole("stallOwner"), validate(updateStallSchema), stallController.updateMyStall);
+
+// Menu routes
+const menuController = require("./controllers/menuController");
+app.get("/api/menu", menuController.getAllMenuItems); // public — browsing + cart
+app.post("/api/menu", verifyJWT, requireRole("stallOwner"), validate(createMenuItemSchema), menuController.addMenuItem);
+app.put("/api/menu/:id", verifyJWT, requireRole("stallOwner"), validate(updateMenuItemSchema), menuController.updateMenuItem);
+app.delete("/api/menu/:id", verifyJWT, requireRole("stallOwner"), menuController.deleteMenuItem);
+
+// Analytics routes (owner only)
+const analyticsController = require("./controllers/analyticsController");
+app.get("/api/analytics/performance", verifyJWT, requireRole("stallOwner"), analyticsController.getPerformance);
+
+// Order routes (any logged-in user)
+const orderController = require("./controllers/orderController");
+app.get("/api/orders/history", verifyJWT, orderController.getMyOrderHistory);
 
 // Error handling (last)
 app.use(notFound);

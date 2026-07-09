@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Stall — CoWork</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<nav id="navbar"></nav>
+
+<div class="page-container">
+  <div id="toastContainer" class="toast-container"></div>
+
+  <div id="loadingState" class="loading">Loading stall data...</div>
+
+  <div id="stallContent" style="display:none">
+    <!-- Stall Info Card -->
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title" id="stallNameDisplay"></h1>
+        <button id="editBtn" class="btn btn-outline btn-sm">Edit</button>
+      </div>
+
+      <div id="stallInfoView">
+        <p><strong>Cuisine:</strong> <span id="stallCuisine"></span></p>
+        <p><strong>Status:</strong> <span id="stallStatus"></span></p>
+        <p><strong>Description:</strong> <span id="stallDescription"></span></p>
+      </div>
+
+      <div id="stallEditForm" class="edit-form">
+        <div class="alert alert-error" style="display:none" id="editStallError"></div>
+        <form id="updateStallForm" novalidate>
+          <div class="form-group">
+            <label for="editStallName" class="form-label">Stall Name</label>
+            <input type="text" id="editStallName" class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="editCuisineType" class="form-label">Cuisine Type</label>
+            <input type="text" id="editCuisineType" class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="editDescription" class="form-label">Description</label>
+            <textarea id="editDescription" class="form-textarea"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="editStatus" class="form-label">Status</label>
+            <select id="editStatus" class="form-select">
+              <option value="open">Open</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:8px">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <button type="button" id="cancelEditBtn" class="btn btn-outline">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stall-grid">
+      <div class="stall-stat">
+        <div class="stall-stat-label">Menu Items</div>
+        <div class="stall-stat-value" id="menuCount">0</div>
+      </div>
+      <div class="stall-stat">
+        <div class="stall-stat-label">Total Likes</div>
+        <div class="stall-stat-value" id="totalLikes">0</div>
+      </div>
+    </div>
+
+    <!-- Menu Items Section -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Menu Items</h2>
+        <button id="showAddFormBtn" class="btn btn-primary btn-sm">+ Add Item</button>
+      </div>
+
+      <!-- Add Menu Item Form -->
+      <div id="addItemForm" class="edit-form" style="margin-bottom:20px; padding:20px; border:1px solid var(--border); border-radius:var(--radius)">
+        <h3 style="margin-bottom:12px; font-size:16px">Add Menu Item</h3>
+        <div class="alert alert-error" style="display:none" id="addItemError"></div>
+        <form id="createMenuItemForm" novalidate>
+          <div class="form-group">
+            <label for="addName" class="form-label">Name *</label>
+            <input type="text" id="addName" class="form-input" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="addPrice" class="form-label">Price *</label>
+              <input type="number" id="addPrice" class="form-input" step="0.01" min="0.01" required>
+            </div>
+            <div class="form-group">
+              <label for="addAvailable" class="form-label">Available</label>
+              <select id="addAvailable" class="form-select">
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="addDescription" class="form-label">Description</label>
+            <textarea id="addDescription" class="form-textarea" placeholder="Optional description"></textarea>
+          </div>
+          <div style="display:flex; gap:8px">
+            <button type="submit" class="btn btn-primary">Add Item</button>
+            <button type="button" id="cancelAddBtn" class="btn btn-outline">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Menu Table -->
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Price</th>
+              <th>Available</th>
+              <th>Likes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="menuTableBody"></tbody>
+        </table>
+      </div>
+      <p id="noMenuItems" class="empty-state" style="display:none">No menu items yet. Add your first item above.</p>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/stall-dashboard.js"></script>
+
+</body>
+</html>

@@ -3,481 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Checkout | WeWork Food Ordering</title>
-  <!-- CSS will be linked here in a future iteration -->
-  <link rel="stylesheet" href="cart.css">
-    <script src="cart.js"></script>
-
+  <title>Checkout | CoWork</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/cart.css">
 </head>
 <body>
 
-  <!-- ============================================================
-       HEADER
-  ============================================================ -->
-  <header class="site-header">
-    <div class="header-container">
+<nav id="navbar"></nav>
 
-      <!-- Logo & Company Name -->
-      <div class="brand">
-        <img src="assets/logo-placeholder.png" alt="WeWork Logo" class="brand-logo">
-        <span class="brand-name">WeWork</span>
-      </div>
+<main class="checkout-main">
 
-      <!-- Search Bar -->
-      <form class="header-search" action="/search" method="GET" role="search">
-        <label for="searchInput" class="visually-hidden">Search for food or restaurants</label>
-        <input type="text" id="searchInput" name="query" class="search-input" placeholder="Search for food, restaurants, or cuisines...">
-        <button type="submit" class="search-btn" aria-label="Search">
-          <img src="assets/icon-search.svg" alt="" class="icon">
-        </button>
-      </form>
+  <section class="page-title-section">
+    <h1 class="page-title">Checkout</h1>
+    <p class="page-subtitle">Review your order before placing it.</p>
+  </section>
 
-      <!-- Navigation Menu -->
-      <nav class="main-nav" aria-label="Main Navigation">
-        <ul class="nav-list">
-          <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
-          <li class="nav-item"><a href="/restaurants" class="nav-link">Restaurants</a></li>
-          <li class="nav-item"><a href="/offers" class="nav-link">Offers</a></li>
-          <li class="nav-item"><a href="/orders" class="nav-link">My Orders</a></li>
-          <li class="nav-item"><a href="/help" class="nav-link">Help</a></li>
-        </ul>
-      </nav>
+  <div class="checkout-grid">
 
-      <!-- User & Cart Icons -->
-      <div class="header-actions">
-        <a href="/profile" class="icon-btn user-icon-btn" aria-label="User Profile">
-          <img src="assets/icon-user.svg" alt="" class="icon">
-        </a>
-        <a href="/cart" class="icon-btn cart-icon-btn" aria-label="Shopping Cart">
-          <img src="assets/icon-cart.svg" alt="" class="icon">
-          <span class="cart-badge" id="cartItemCount">3</span>
-        </a>
-      </div>
+    <div class="checkout-left-column">
 
-    </div>
-  </header>
+      <section class="cart-section" aria-labelledby="cartSectionTitle">
+        <h2 id="cartSectionTitle" class="section-heading">Your Cart</h2>
+        <ul class="cart-item-list"></ul>
+      </section>
 
-  <!-- ============================================================
-       MAIN CONTENT WRAPPER
-  ============================================================ -->
-  <main class="checkout-main">
-
-    <!-- ============================================================
-         PAGE TITLE
-    ============================================================ -->
-    <section class="page-title-section">
-      <h1 class="page-title">Checkout</h1>
-      <p class="page-subtitle">Review your order before placing it.</p>
-    </section>
-
-    <!-- ============================================================
-         CONTENT GRID: LEFT (Cart/Payment/Delivery) + RIGHT (Sidebar)
-    ============================================================ -->
-    <div class="checkout-grid">
-
-      <!-- ============================================================
-           LEFT COLUMN
-      ============================================================ -->
-      <div class="checkout-left-column">
-
-        <!-- ============================================================
-             SHOPPING CART SECTION
-        ============================================================ -->
-        <section class="cart-section" aria-labelledby="cartSectionTitle">
-          <h2 id="cartSectionTitle" class="section-heading">Your Cart</h2>
-
-          <ul class="cart-item-list">
-
-            <!-- Cart Item 1 -->
-            <li class="cart-item" data-item-id="ITEM-1001">
-              <div class="cart-item-image">
-                <img src="assets/food-placeholder-1.jpg" alt="Chicken Rice">
-              </div>
-
-              <div class="cart-item-details">
-                <h3 class="cart-item-name">Signature Chicken Rice</h3>
-                <p class="cart-item-vendor">Sold by: Auntie Lee's Kitchen</p>
-                <p class="cart-item-description">Steamed chicken with fragrant rice, served with chili and cucumber.</p>
-
-                <!-- Add-ons -->
-                <div class="cart-item-addons">
-                  <span class="addon-label">Add-ons:</span>
-                  <ul class="addon-list">
-                    <li class="addon-tag">Extra Chicken (+$2.00)</li>
-                    <li class="addon-tag">Boiled Egg (+$0.80)</li>
-                  </ul>
-                </div>
-
-                <!-- Special Instructions -->
-                <div class="cart-item-instructions">
-                  <label for="instructions-1001" class="instructions-label">Special Instructions</label>
-                  <textarea id="instructions-1001" name="instructions_1001" class="instructions-input" rows="2" placeholder="e.g. Less spicy, no onions"></textarea>
-                </div>
-              </div>
-
-              <div class="cart-item-controls">
-                <!-- Quantity Selector -->
-                <div class="quantity-selector" data-item-id="ITEM-1001">
-                  <button type="button" class="qty-btn qty-decrease" aria-label="Decrease quantity">−</button>
-                  <span class="qty-value" id="qty-1001">1</span>
-                  <button type="button" class="qty-btn qty-increase" aria-label="Increase quantity">+</button>
-                </div>
-
-                <p class="cart-item-price" data-price="8.50">$8.50</p>
-
-                <button type="button" class="remove-item-btn" data-item-id="ITEM-1001">
-                  <img src="assets/icon-trash.svg" alt="" class="icon">
-                  Remove
-                </button>
-              </div>
-            </li>
-
-            <!-- Cart Item 2 -->
-            <li class="cart-item" data-item-id="ITEM-1002">
-              <div class="cart-item-image">
-                <img src="assets/food-placeholder-2.jpg" alt="Iced Milo">
-              </div>
-
-              <div class="cart-item-details">
-                <h3 class="cart-item-name">Iced Milo Special</h3>
-                <p class="cart-item-vendor">Sold by: Campus Beverage Corner</p>
-                <p class="cart-item-description">Classic iced Milo topped with extra Milo powder.</p>
-
-                <div class="cart-item-addons">
-                  <span class="addon-label">Add-ons:</span>
-                  <ul class="addon-list">
-                    <li class="addon-tag">Less Ice</li>
-                  </ul>
-                </div>
-
-                <div class="cart-item-instructions">
-                  <label for="instructions-1002" class="instructions-label">Special Instructions</label>
-                  <textarea id="instructions-1002" name="instructions_1002" class="instructions-input" rows="2" placeholder="e.g. No sugar"></textarea>
-                </div>
-              </div>
-
-              <div class="cart-item-controls">
-                <div class="quantity-selector" data-item-id="ITEM-1002">
-                  <button type="button" class="qty-btn qty-decrease" aria-label="Decrease quantity">−</button>
-                  <span class="qty-value" id="qty-1002">2</span>
-                  <button type="button" class="qty-btn qty-increase" aria-label="Increase quantity">+</button>
-                </div>
-
-                <p class="cart-item-price" data-price="3.20">$3.20</p>
-
-                <button type="button" class="remove-item-btn" data-item-id="ITEM-1002">
-                  <img src="assets/icon-trash.svg" alt="" class="icon">
-                  Remove
-                </button>
-              </div>
-            </li>
-
-            <!-- Cart Item 3 -->
-            <li class="cart-item" data-item-id="ITEM-1003">
-              <div class="cart-item-image">
-                <img src="assets/food-placeholder-3.jpg" alt="Vegetable Spring Rolls">
-              </div>
-
-              <div class="cart-item-details">
-                <h3 class="cart-item-name">Vegetable Spring Rolls</h3>
-                <p class="cart-item-vendor">Sold by: Green Leaf Snacks</p>
-                <p class="cart-item-description">Crispy fried spring rolls filled with fresh vegetables.</p>
-
-                <div class="cart-item-addons">
-                  <span class="addon-label">Add-ons:</span>
-                  <ul class="addon-list">
-                    <li class="addon-tag">Sweet Chili Sauce (+$0.50)</li>
-                  </ul>
-                </div>
-
-                <div class="cart-item-instructions">
-                  <label for="instructions-1003" class="instructions-label">Special Instructions</label>
-                  <textarea id="instructions-1003" name="instructions_1003" class="instructions-input" rows="2" placeholder="e.g. Extra crispy"></textarea>
-                </div>
-              </div>
-
-              <div class="cart-item-controls">
-                <div class="quantity-selector" data-item-id="ITEM-1003">
-                  <button type="button" class="qty-btn qty-decrease" aria-label="Decrease quantity">−</button>
-                  <span class="qty-value" id="qty-1003">1</span>
-                  <button type="button" class="qty-btn qty-increase" aria-label="Increase quantity">+</button>
-                </div>
-
-                <p class="cart-item-price" data-price="4.90">$4.90</p>
-
-                <button type="button" class="remove-item-btn" data-item-id="ITEM-1003">
-                  <img src="assets/icon-trash.svg" alt="" class="icon">
-                  Remove
-                </button>
-              </div>
-            </li>
-
-          </ul>
-        </section>
-
-        <!-- ============================================================
-             ORDER SUMMARY SECTION
-        ============================================================ -->
-        <section class="order-summary-section" aria-labelledby="orderSummaryTitle">
-          <h2 id="orderSummaryTitle" class="section-heading">Order Summary</h2>
-
-          <dl class="summary-list">
-            <div class="summary-row">
-              <dt class="summary-label">Subtotal</dt>
-              <dd class="summary-value" id="summarySubtotal">$16.60</dd>
-            </div>
-            <div class="summary-row">
-              <dt class="summary-label">Packaging Fee</dt>
-              <dd class="summary-value" id="summaryPackagingFee">$0.60</dd>
-            </div>
-            <div class="summary-row">
-              <dt class="summary-label">Delivery Fee</dt>
-              <dd class="summary-value" id="summaryDeliveryFee">$2.50</dd>
-            </div>
-            <div class="summary-row">
-              <dt class="summary-label">GST (9%)</dt>
-              <dd class="summary-value" id="summaryGST">$1.49</dd>
-            </div>
-            <div class="summary-row summary-discount">
-              <dt class="summary-label">Discount</dt>
-              <dd class="summary-value" id="summaryDiscount">−$1.00</dd>
-            </div>
-            <div class="summary-row summary-total-row">
-              <dt class="summary-label summary-total-label">Grand Total</dt>
-              <dd class="summary-value summary-total-value" id="summaryGrandTotal">$20.19</dd>
-            </div>
-          </dl>
-        </section>
-
-        <!-- ============================================================
-             PAYMENT SECTION
-        ============================================================ -->
-        <section class="payment-section" aria-labelledby="paymentSectionTitle">
-          <h2 id="paymentSectionTitle" class="section-heading">Payment Method</h2>
-
-          <form class="payment-form" action="/checkout/payment" method="POST">
-
-            <fieldset class="payment-options">
-              <legend class="visually-hidden">Choose a payment method</legend>
-
-              <label class="payment-option">
-                <input type="radio" name="paymentMethod" value="credit_card" checked>
-                <span class="payment-option-label">Credit Card</span>
-              </label>
-
-              <label class="payment-option">
-                <input type="radio" name="paymentMethod" value="debit_card">
-                <span class="payment-option-label">Debit Card</span>
-              </label>
-
-              <label class="payment-option">
-                <input type="radio" name="paymentMethod" value="paynow">
-                <span class="payment-option-label">PayNow</span>
-              </label>
-
-              <label class="payment-option">
-                <input type="radio" name="paymentMethod" value="cash">
-                <span class="payment-option-label">Cash on Delivery</span>
-              </label>
-
-              <label class="payment-option">
-                <input type="radio" name="paymentMethod" value="gift_card">
-                <span class="payment-option-label">Gift Card</span>
-              </label>
-            </fieldset>
-
-            <!-- Promo Code -->
-            <div class="promo-code-group">
-              <label for="promoCode" class="promo-code-label">Promo Code</label>
-              <div class="promo-code-input-wrapper">
-                <input type="text" id="promoCode" name="promoCode" class="promo-code-input" placeholder="Enter promo code">
-                <button type="submit" class="apply-promo-btn" formaction="/checkout/apply-promo">Apply</button>
-              </div>
-            </div>
-
-          </form>
-        </section>
-
-        <!-- ============================================================
-             DELIVERY SECTION
-        ============================================================ -->
-        <section class="delivery-section" aria-labelledby="deliverySectionTitle">
-          <h2 id="deliverySectionTitle" class="section-heading">Delivery Details</h2>
-
-          <form class="delivery-form" action="/checkout/delivery" method="POST">
-
-            <div class="form-group">
-              <label for="deliveryAddress" class="form-label">Delivery Address</label>
-              <input type="text" id="deliveryAddress" name="deliveryAddress" class="form-input" placeholder="Block 12, Student Residence Hall, Room 305">
-            </div>
-
-            <div class="form-group">
-              <label for="recipientName" class="form-label">Recipient Name</label>
-              <input type="text" id="recipientName" name="recipientName" class="form-input" placeholder="Full Name">
-            </div>
-
-            <div class="form-group">
-              <label for="phoneNumber" class="form-label">Phone Number</label>
-              <input type="tel" id="phoneNumber" name="phoneNumber" class="form-input" placeholder="+65 9123 4567">
-            </div>
-
-            <div class="form-group">
-              <label for="estimatedDeliveryTime" class="form-label">Estimated Delivery Time</label>
-              <input type="text" id="estimatedDeliveryTime" name="estimatedDeliveryTime" class="form-input" value="25 - 35 mins" readonly>
-            </div>
-
-            <div class="form-group form-group-full">
-              <label for="deliveryInstructions" class="form-label">Delivery Instructions</label>
-              <textarea id="deliveryInstructions" name="deliveryInstructions" class="form-textarea" rows="3" placeholder="e.g. Leave at the guard house, call upon arrival"></textarea>
-            </div>
-
-          </form>
-        </section>
-
-        <!-- ============================================================
-             ORDER STATUS PREVIEW (TIMELINE)
-        ============================================================ -->
-        <section class="order-status-section" aria-labelledby="orderStatusTitle">
-          <h2 id="orderStatusTitle" class="section-heading">Order Status</h2>
-
-          <ol class="status-timeline">
-            <li class="status-step status-step-completed">
-              <span class="status-icon"></span>
-              <span class="status-label">Cart</span>
-            </li>
-            <li class="status-step status-step-active">
-              <span class="status-icon"></span>
-              <span class="status-label">Payment</span>
-            </li>
-            <li class="status-step">
-              <span class="status-icon"></span>
-              <span class="status-label">Order Confirmed</span>
-            </li>
-            <li class="status-step">
-              <span class="status-icon"></span>
-              <span class="status-label">Merchant Preparing</span>
-            </li>
-            <li class="status-step">
-              <span class="status-icon"></span>
-              <span class="status-label">Out for Delivery</span>
-            </li>
-            <li class="status-step">
-              <span class="status-icon"></span>
-              <span class="status-label">Delivered</span>
-            </li>
-          </ol>
-        </section>
-
-        <!-- ============================================================
-             PLACE ORDER SECTION
-        ============================================================ -->
-        <section class="place-order-section">
-          <form class="place-order-form" action="/checkout/place-order" method="POST">
-            <button type="submit" class="place-order-btn">Place Order</button>
-            <button type="button" class="cancel-order-btn">Cancel Order</button>
-          </form>
-        </section>
-
-      </div>
-      <!-- END LEFT COLUMN -->
-
-      <!-- ============================================================
-           RIGHT SIDEBAR
-      ============================================================ -->
-      <aside class="checkout-sidebar" aria-labelledby="sidebarTitle">
-        <h2 id="sidebarTitle" class="visually-hidden">Order Information</h2>
-
-        <!-- Estimated Delivery -->
-        <div class="sidebar-card estimated-delivery-card">
-          <h3 class="sidebar-card-title">Estimated Delivery</h3>
-          <p class="estimated-delivery-time">25 - 35 mins</p>
-        </div>
-
-        <!-- Restaurant Information -->
-        <div class="sidebar-card restaurant-info-card">
-          <h3 class="sidebar-card-title">Restaurant Information</h3>
-          <div class="restaurant-info">
-            <img src="assets/restaurant-placeholder.jpg" alt="Restaurant" class="restaurant-logo">
-            <div class="restaurant-details">
-              <p class="restaurant-name">Campus Food Hub</p>
-              <p class="restaurant-address">Block C, University Food Court, Level 1</p>
-            </div>
+      <section class="order-summary-section" aria-labelledby="orderSummaryTitle">
+        <h2 id="orderSummaryTitle" class="section-heading">Order Summary</h2>
+        <dl class="summary-list">
+          <div class="summary-row">
+            <dt class="summary-label">Subtotal</dt>
+            <dd class="summary-value" id="summarySubtotal">$0.00</dd>
           </div>
-        </div>
-
-        <!-- Operating Hours -->
-        <div class="sidebar-card operating-hours-card">
-          <h3 class="sidebar-card-title">Operating Hours</h3>
-          <ul class="operating-hours-list">
-            <li class="operating-hours-item">
-              <span class="hours-day">Mon - Fri</span>
-              <span class="hours-time">8:00 AM - 9:00 PM</span>
-            </li>
-            <li class="operating-hours-item">
-              <span class="hours-day">Sat - Sun</span>
-              <span class="hours-time">9:00 AM - 6:00 PM</span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Delivery Rider -->
-        <div class="sidebar-card rider-info-card">
-          <h3 class="sidebar-card-title">Delivery Rider</h3>
-          <div class="rider-info">
-            <img src="assets/rider-placeholder.jpg" alt="Delivery Rider" class="rider-photo">
-            <div class="rider-details">
-              <p class="rider-name">Not Assigned Yet</p>
-              <p class="rider-status">Rider will be assigned after order confirmation</p>
-            </div>
+          <div class="summary-row">
+            <dt class="summary-label">Packaging Fee</dt>
+            <dd class="summary-value" id="summaryPackagingFee">$0.00</dd>
           </div>
-        </div>
-
-        <!-- Order Number -->
-        <div class="sidebar-card order-number-card">
-          <h3 class="sidebar-card-title">Order Number</h3>
-          <p class="order-number" id="orderNumberPlaceholder">#ORD-000000</p>
-        </div>
-
-      </aside>
-      <!-- END RIGHT SIDEBAR -->
-
-    </div>
-    <!-- END CHECKOUT GRID -->
-
-  </main>
-
-  <!-- ============================================================
-       FOOTER
-  ============================================================ -->
-  <footer class="site-footer">
-    <div class="footer-container">
-
-      <div class="footer-links">
-        <a href="/about" class="footer-link">About</a>
-        <a href="/contact" class="footer-link">Contact</a>
-        <a href="/privacy-policy" class="footer-link">Privacy Policy</a>
-        <a href="/terms" class="footer-link">Terms &amp; Conditions</a>
-      </div>
-
-      <div class="footer-social">
-        <a href="#" class="social-icon-link" aria-label="Facebook">
-          <img src="assets/icon-facebook.svg" alt="" class="icon">
-        </a>
-        <a href="#" class="social-icon-link" aria-label="Instagram">
-          <img src="assets/icon-instagram.svg" alt="" class="icon">
-        </a>
-        <a href="#" class="social-icon-link" aria-label="Twitter">
-          <img src="assets/icon-twitter.svg" alt="" class="icon">
-        </a>
-        <a href="#" class="social-icon-link" aria-label="TikTok">
-          <img src="assets/icon-tiktok.svg" alt="" class="icon">
-        </a>
-      </div>
-
-      <p class="footer-copyright">&copy; 2026 WeWork. All rights reserved. | University Backend Development Project</p>
+          <div class="summary-row">
+            <dt class="summary-label">Delivery Fee</dt>
+            <dd class="summary-value" id="summaryDeliveryFee">$0.00</dd>
+          </div>
+          <div class="summary-row">
+            <dt class="summary-label">GST (9%)</dt>
+            <dd class="summary-value" id="summaryGST">$0.00</dd>
+          </div>
+          <div class="summary-row summary-total-row">
+            <dt class="summary-label summary-total-label">Grand Total</dt>
+            <dd class="summary-value summary-total-value" id="summaryGrandTotal">$0.00</dd>
+          </div>
+        </dl>
+      </section>
 
     </div>
-  </footer>
+
+    <aside class="checkout-sidebar"></aside>
+
+  </div>
+
+</main>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/cart.js"></script>
 
 </body>
 </html>

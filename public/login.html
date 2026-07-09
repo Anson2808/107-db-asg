@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — CoWork</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<nav id="navbar"></nav>
+
+<div class="auth-container">
+  <div class="auth-card">
+    <h1 class="auth-title">Welcome back</h1>
+    <p class="auth-subtitle">Log in to your CoWork account</p>
+
+    <div id="loginError" class="alert alert-error" style="display:none"></div>
+
+    <form id="loginForm" class="auth-form" novalidate>
+      <div class="form-group">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" id="username" class="form-input" placeholder="Enter your username" required autocomplete="username">
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" id="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password">
+      </div>
+
+      <button type="submit" class="btn btn-primary">Log In</button>
+    </form>
+
+    <p class="auth-link">
+      Don't have an account? <a href="/register.html">Register here</a>
+    </p>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/login.js"></script>
+
+</body>
+</html>

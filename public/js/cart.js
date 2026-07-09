@@ -73,25 +73,24 @@ let menuItemsCache = [];
 ============================================================ */
 
 /**
- * Mock GET /api/menu-items
- * Simulates: SELECT MenuItems.*, Stalls.StallName
- *            FROM MenuItems JOIN Stalls ON MenuItems.StallId = Stalls.StallId
- * TODO: Replace with a real fetch('/api/menu-items') call once
- *       the Express route exists.
+ * GET /api/menu — real endpoint.
+ * Runs: SELECT MenuItems.*, Stalls.StallName, Stalls.CuisineType
+ *       FROM MenuItems JOIN Stalls ON MenuItems.StallId = Stalls.StallId
+ * Maps DB column casing (MenuItemId, Name, ...) to the camelCase
+ * shape the rest of this file expects.
  */
 async function fetchMenuItems() {
-  // Simulated network delay so UI loading states can be tested
-  await mockDelay(150);
+  const data = await api('/menu');
 
-  return [
-    { menuItemId: 1, stallId: 1, stallName: 'Roti John Express', name: 'Classic Roti John', description: 'Toasted baguette with minced mutton, egg, and special sauce', price: 6.50, isAvailable: true },
-    { menuItemId: 2, stallId: 1, stallName: 'Roti John Express', name: 'Chicken Roti John', description: 'Crispy baguette layered with spiced chicken and onion-egg scramble', price: 6.00, isAvailable: true },
-    { menuItemId: 3, stallId: 1, stallName: 'Roti John Express', name: 'Cheese Roti John', description: 'The classic with a generous blanket of melted cheddar', price: 7.50, isAvailable: true },
-    { menuItemId: 7, stallId: 2, stallName: 'Wok & Roll', name: 'Char Kway Teow', description: 'Flat rice noodles wok-fried with prawns, cockles, and dark soy', price: 7.00, isAvailable: true },
-    { menuItemId: 8, stallId: 2, stallName: 'Wok & Roll', name: 'Hokkien Mee', description: 'Thick yellow noodles braised in rich prawn broth with pork belly', price: 7.50, isAvailable: true },
-    { menuItemId: 13, stallId: 3, stallName: 'Spice Garden', name: 'Chicken Biryani', description: 'Fragrant basmati rice layered with marinated chicken and saffron', price: 9.00, isAvailable: true },
-    { menuItemId: 14, stallId: 3, stallName: 'Spice Garden', name: 'Butter Chicken', description: 'Tandoori chicken simmered in creamy tomato-butter gravy', price: 8.50, isAvailable: true }
-  ];
+  return (data.items || []).map((item) => ({
+    menuItemId: item.MenuItemId,
+    stallId: item.StallId,
+    stallName: item.StallName,
+    name: item.Name,
+    description: item.Description || '',
+    price: Number(item.Price),
+    isAvailable: !!item.IsAvailable
+  }));
 }
 
 /**
@@ -594,4 +593,7 @@ async function initCart() {
   attachCartEventListeners();
 }
 
-document.addEventListener('DOMContentLoaded', initCart);
+document.addEventListener('DOMContentLoaded', () => {
+  renderNavbar();
+  initCart();
+});

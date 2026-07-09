@@ -3,9 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CoWork</title>
+  <title>CoWork — Campus Food Ordering</title>
+  <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
+
+<nav id="navbar"></nav>
+
+<div class="page-container">
   <h1>Welcome to CoWork</h1>
+  <p style="color: var(--text-secondary); margin-top:8px">Your campus food ordering platform.</p>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    renderNavbar();
+  });
+</script>
+
 </body>
 </html>
