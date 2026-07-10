@@ -324,3 +324,20 @@ INSERT INTO dbo.Feedback (StallId, UserId, Rating, Comment, CreatedAt) VALUES
 (3, 4, 4, 'Butter chicken was creamy and rich. Naan was perfect.',      '2026-04-08T12:00:00'),
 (3, 5, 3, 'Biryani was a bit dry. Portion size could be bigger.',       '2026-05-15T13:00:00'),
 (3, 4, 5, 'Best Indian food on campus! Mango lassi is a must-try.',     '2026-06-20T12:30:00');
+
+CREATE TABLE Inspections (
+    InspectionId INT IDENTITY(1,1) PRIMARY KEY,
+    StallId INT NOT NULL FOREIGN KEY REFERENCES Stalls(StallId),
+    InspectionDate DATE NOT NULL,
+    Grade VARCHAR(2) NOT NULL, -- e.g., 'A', 'B', 'C'
+    Score INT NOT NULL, -- 0-100 scale
+    Violations NVARCHAR(MAX), -- Comma-separated list of issues
+    CreatedAt DATETIME DEFAULT GETDATE()
+);
+
+-- Insert some dummy data (assuming your stall is StallId = 1, change if needed)
+INSERT INTO Inspections (StallId, InspectionDate, Grade, Score, Violations)
+VALUES 
+(1, '2025-08-15', 'C', 65, 'Cross-contamination flag, Improper storage temp'),
+(1, '2026-02-10', 'B', 78, 'Minor structural upkeep'),
+(1, '2026-07-20', 'A', 92, 'None');

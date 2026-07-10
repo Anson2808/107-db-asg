@@ -19,7 +19,9 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// Auth routes
+// ==========================================
+// MIDDLEWARES
+// ==========================================
 const {
   validate,
   registerSchema,
@@ -29,6 +31,12 @@ const {
   updateMenuItemSchema,
 } = require("./middlewares/validateMiddleware");
 const { verifyJWT, requireRole } = require("./middlewares/authMiddleware");
+
+// ==========================================
+// ROUTES
+// ==========================================
+
+// Auth routes
 const authController = require("./controllers/authController");
 app.post("/api/auth/register", validate(registerSchema), authController.register);
 app.post("/api/auth/login", validate(loginSchema), authController.login);
@@ -49,11 +57,18 @@ app.delete("/api/menu/:id", verifyJWT, requireRole("stallOwner"), menuController
 const analyticsController = require("./controllers/analyticsController");
 app.get("/api/analytics/performance", verifyJWT, requireRole("stallOwner"), analyticsController.getPerformance);
 
+// Inspections & Hygiene routes (owner only)
+const inspectionController = require("./controllers/inspectionController");
+app.get("/api/inspections/history", verifyJWT, requireRole("stallOwner"), inspectionController.getMyHygieneHistory);
+app.post("/api/inspections", verifyJWT, requireRole("stallOwner"), inspectionController.addMyHygieneRecord);
+
 // Order routes (any logged-in user)
 const orderController = require("./controllers/orderController");
 app.get("/api/orders/history", verifyJWT, orderController.getMyOrderHistory);
 
-// Error handling (last)
+// ==========================================
+// ERROR HANDLING (Must be last)
+// ==========================================
 app.use(notFound);
 app.use(errorHandler);
 
@@ -67,5 +82,3 @@ app.use(errorHandler);
 })();
 
 module.exports = app;
-
-
