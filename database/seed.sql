@@ -158,13 +158,15 @@ CREATE TABLE dbo.Complaints (
 -- ============================================================
 -- Inspections
 -- ============================================================
+-- NOTE: column is named "Violations" (not ViolationCategory) to match
+-- models/inspectionModel.js, which SELECTs and INSERTs Violations.
 CREATE TABLE dbo.Inspections (
     InspectionId     INT IDENTITY(1,1) PRIMARY KEY,
     StallId          INT          NOT NULL,
     InspectionDate   DATE         NOT NULL,
     Score            INT          NOT NULL,
     Grade            NCHAR(1)     NOT NULL CHECK (Grade IN ('A','B','C','D')),
-    ViolationCategory NVARCHAR(100) NULL,
+    Violations       NVARCHAR(200) NULL,
     Notes            NVARCHAR(500) NULL,
     CONSTRAINT FK_Inspections_Stall FOREIGN KEY (StallId) REFERENCES dbo.Stalls(StallId)
 );
@@ -173,13 +175,13 @@ CREATE TABLE dbo.Inspections (
 -- SEED DATA
 -- ============================================================
 
--- Users (bcrypt hash for "password" used as placeholder)
+-- Users (all seeded accounts log in with the password: password)
 INSERT INTO dbo.Users (Username, PasswordHash, Email, FullName, Role) VALUES
-('ahmad88',   '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'ahmad@cowork.com',   'Ahmad bin Ismail', 'stallOwner'),
-('meiling',   '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'meiling@cowork.com',  'Tan Mei Ling',     'stallOwner'),
-('kumar_s',   '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'kumar@cowork.com',    'Siva Kumar',       'stallOwner'),
-('jane_doe',  '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'jane@example.com',    'Jane Doe',         'customer'),
-('bob_tan',   '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'bob@example.com',     'Bob Tan',          'customer');
+('ahmad88',   '$2b$10$KX7HzGg4HnPN09EJy/t.WO3zQqFqkV3iBzrkFnJBbzmSqe9SUJMdG', 'ahmad@cowork.com',   'Ahmad bin Ismail', 'stallOwner'),
+('meiling',   '$2b$10$KX7HzGg4HnPN09EJy/t.WO3zQqFqkV3iBzrkFnJBbzmSqe9SUJMdG', 'meiling@cowork.com',  'Tan Mei Ling',     'stallOwner'),
+('kumar_s',   '$2b$10$KX7HzGg4HnPN09EJy/t.WO3zQqFqkV3iBzrkFnJBbzmSqe9SUJMdG', 'kumar@cowork.com',    'Siva Kumar',       'stallOwner'),
+('jane_doe',  '$2b$10$KX7HzGg4HnPN09EJy/t.WO3zQqFqkV3iBzrkFnJBbzmSqe9SUJMdG', 'jane@example.com',    'Jane Doe',         'customer'),
+('bob_tan',   '$2b$10$KX7HzGg4HnPN09EJy/t.WO3zQqFqkV3iBzrkFnJBbzmSqe9SUJMdG', 'bob@example.com',     'Bob Tan',          'customer');
 
 -- Stalls
 INSERT INTO dbo.Stalls (OwnerId, StallName, Description, CuisineType, Status) VALUES
@@ -215,7 +217,8 @@ INSERT INTO dbo.MenuItems (StallId, Name, Description, Price, IsAvailable, LikeC
 (3, 'Masala Chai',             'Spiced Indian milk tea brewed with cardamom, ginger, and cloves',         2.00, 1, 14);
 
 -- Inspections — Roti John Express (Stall 1)
-INSERT INTO dbo.Inspections (StallId, InspectionDate, Score, Grade, ViolationCategory, Notes) VALUES
+INSERT INTO dbo.Inspections (StallId, InspectionDate, Score, Grade, Violations, Notes) VALUES
+(1, '2025-08-15', 65, 'C', 'Cross-contamination flag, Improper storage temp', 'Multiple violations — follow-up inspection scheduled.'),
 (1, '2026-01-15', 95, 'A', NULL,              'All stations clean, food stored at correct temperatures.'),
 (1, '2026-02-28', 88, 'B', 'Minor — Storage', 'Dry goods stored on floor in back area. Corrected on site.'),
 (1, '2026-04-10', 92, 'A', NULL,              'No violations. Staff hygiene practices excellent.'),
@@ -223,7 +226,7 @@ INSERT INTO dbo.Inspections (StallId, InspectionDate, Score, Grade, ViolationCat
 (1, '2026-06-30', 94, 'A', NULL,              'Previous issue resolved. Kitchen in great condition.');
 
 -- Inspections — Wok & Roll (Stall 2)
-INSERT INTO dbo.Inspections (StallId, InspectionDate, Score, Grade, ViolationCategory, Notes) VALUES
+INSERT INTO dbo.Inspections (StallId, InspectionDate, Score, Grade, Violations, Notes) VALUES
 (2, '2026-01-20', 90, 'A', NULL,               'Clean and well-organised kitchen.'),
 (2, '2026-03-05', 76, 'C', 'Pest / Storage',   'Evidence of pests in dry storage. Mandatory pest control ordered.'),
 (2, '2026-04-18', 82, 'B', 'Cleaning',          'Pest issue resolved. Some utensils need deeper cleaning.'),
@@ -231,7 +234,7 @@ INSERT INTO dbo.Inspections (StallId, InspectionDate, Score, Grade, ViolationCat
 (2, '2026-06-25', 91, 'A', NULL,                'All prior violations cleared. Good overall compliance.');
 
 -- Inspections — Spice Garden (Stall 3)
-INSERT INTO dbo.Inspections (StallId, InspectionDate, Score, Grade, ViolationCategory, Notes) VALUES
+INSERT INTO dbo.Inspections (StallId, InspectionDate, Score, Grade, Violations, Notes) VALUES
 (3, '2026-01-10', 91, 'A', NULL,                     'Well-maintained. Spice storage properly labelled.'),
 (3, '2026-02-25', 84, 'B', 'Temperature / Storage',   'Walk-in chiller at 6°C (must be ≤4°C). Adjusted on the spot.'),
 (3, '2026-04-02', 79, 'C', 'Hygiene',                 'Food handler without hair restraint. Staff retraining required.'),
@@ -324,20 +327,3 @@ INSERT INTO dbo.Feedback (StallId, UserId, Rating, Comment, CreatedAt) VALUES
 (3, 4, 4, 'Butter chicken was creamy and rich. Naan was perfect.',      '2026-04-08T12:00:00'),
 (3, 5, 3, 'Biryani was a bit dry. Portion size could be bigger.',       '2026-05-15T13:00:00'),
 (3, 4, 5, 'Best Indian food on campus! Mango lassi is a must-try.',     '2026-06-20T12:30:00');
-
-CREATE TABLE Inspections (
-    InspectionId INT IDENTITY(1,1) PRIMARY KEY,
-    StallId INT NOT NULL FOREIGN KEY REFERENCES Stalls(StallId),
-    InspectionDate DATE NOT NULL,
-    Grade VARCHAR(2) NOT NULL, -- e.g., 'A', 'B', 'C'
-    Score INT NOT NULL, -- 0-100 scale
-    Violations NVARCHAR(MAX), -- Comma-separated list of issues
-    CreatedAt DATETIME DEFAULT GETDATE()
-);
-
--- Insert some dummy data (assuming your stall is StallId = 1, change if needed)
-INSERT INTO Inspections (StallId, InspectionDate, Grade, Score, Violations)
-VALUES 
-(1, '2025-08-15', 'C', 65, 'Cross-contamination flag, Improper storage temp'),
-(1, '2026-02-10', 'B', 78, 'Minor structural upkeep'),
-(1, '2026-07-20', 'A', 92, 'None');

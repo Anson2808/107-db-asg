@@ -62,6 +62,17 @@ const updateMenuItemSchema = Joi.object({
   isAvailable: Joi.boolean().optional(),
 }).min(1);
 
+// Add to cart schema
+const addToCartSchema = Joi.object({
+  menuItemId: Joi.number().integer().required(),
+  quantity: Joi.number().integer().min(1).default(1),
+});
+
+// Update cart quantity schema
+const updateCartQuantitySchema = Joi.object({
+  quantity: Joi.number().integer().min(1).required(),
+});
+
 module.exports = {
   validate,
   registerSchema,
@@ -69,4 +80,6 @@ module.exports = {
   updateStallSchema,
   createMenuItemSchema,
   updateMenuItemSchema,
+  addToCartSchema,
+  updateCartQuantitySchema,
 };

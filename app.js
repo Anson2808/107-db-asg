@@ -29,6 +29,8 @@ const {
   updateStallSchema,
   createMenuItemSchema,
   updateMenuItemSchema,
+  addToCartSchema,
+  updateCartQuantitySchema,
 } = require("./middlewares/validateMiddleware");
 const { verifyJWT, requireRole } = require("./middlewares/authMiddleware");
 
@@ -65,6 +67,13 @@ app.post("/api/inspections", verifyJWT, requireRole("stallOwner"), inspectionCon
 // Order routes (any logged-in user)
 const orderController = require("./controllers/orderController");
 app.get("/api/orders/history", verifyJWT, orderController.getMyOrderHistory);
+
+// Cart routes (any logged-in user)
+const cartController = require("./controllers/cartController");
+app.post("/api/cart", verifyJWT, validate(addToCartSchema), cartController.addToCart);
+app.get("/api/cart", verifyJWT, cartController.getCart);
+app.put("/api/cart/:cartItemId", verifyJWT, validate(updateCartQuantitySchema), cartController.updateCartItem);
+app.delete("/api/cart/:cartItemId", verifyJWT, cartController.removeFromCart);
 
 // ==========================================
 // ERROR HANDLING (Must be last)
