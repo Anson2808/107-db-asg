@@ -27,6 +27,16 @@
         <ul class="cart-item-list"></ul>
       </section>
 
+      <section class="place-order-section">
+        <button type="button" class="place-order-btn" disabled>Proceed to Payment →</button>
+        <p class="checkout-note">Secure checkout — choose your payment method on the next page.</p>
+        <a class="continue-browsing-link" href="/">← Continue browsing</a>
+        <p class="place-order-message" role="status" aria-live="polite"></p>
+      </section>
+
+    </div>
+
+    <aside class="checkout-sidebar">
       <section class="order-summary-section" aria-labelledby="orderSummaryTitle">
         <h2 id="orderSummaryTitle" class="section-heading">Order Summary</h2>
         <dl class="summary-list">
@@ -52,23 +62,7 @@
           </div>
         </dl>
       </section>
-
-      <section class="payment-section" aria-labelledby="paymentSectionTitle">
-        <h2 id="paymentSectionTitle" class="section-heading">Payment Method</h2>
-        <select id="paymentMethod" class="payment-method-select">
-          <option value="payment">Choose your payment method on the next page</option>
-        </select>
-      </section>
-
-      <section class="place-order-section">
-        <button type="button" class="place-order-btn" disabled>Proceed to Payment</button>
-        <button type="button" class="cancel-order-btn">Cancel Order</button>
-        <p class="place-order-message" role="status" aria-live="polite"></p>
-      </section>
-
-    </div>
-
-    <aside class="checkout-sidebar"></aside>
+    </aside>
 
   </div>
 

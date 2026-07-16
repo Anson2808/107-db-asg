@@ -965,6 +965,27 @@ textarea {
   transform: translateY(0);
 }
 
+.checkout-note {
+  margin-top: var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.continue-browsing-link {
+  display: block;
+  width: fit-content;
+  margin: var(--space-4) auto 0;
+  color: var(--color-accent);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.continue-browsing-link:hover {
+  text-decoration: underline;
+}
+
 .cancel-order-btn {
   width: 100%;
   padding: 14px var(--space-5);
@@ -992,6 +1013,7 @@ textarea {
   gap: var(--space-5);
   position: sticky;
   top: calc(var(--header-height) + var(--space-6));
+  align-self: start;
 }
 
 .sidebar-card-title {
