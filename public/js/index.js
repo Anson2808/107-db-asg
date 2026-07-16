@@ -51,6 +51,8 @@ function addToCartLocal(menuItemId, quantity) {
 ============================================================ */
 
 let allItems = [];       // raw items from API (PascalCase columns)
+const stallReviews = new Map();
+const reviewSorts = new Map();
 
 /* ============================================================
    RENDER: filter dropdown
@@ -62,7 +64,7 @@ function renderCuisineFilter() {
   if (!select) return;
 
   // Keep "All Cuisines" option, append the rest
-  select.innerHTML = '<option value="">All Cuisines</option>' +
+  select.innerHTML = `<option value="">${t('allCuisines')}</option>` +
     cuisines.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
 
   select.addEventListener('change', renderMenu);
@@ -85,7 +87,7 @@ function renderMenu() {
   const filtered = getFilteredItems();
 
   if (filtered.length === 0) {
-    container.innerHTML = '<div class="empty-state">No menu items found.</div>';
+    container.innerHTML = `<div class="empty-state">${t('noMenuItems')}</div>`;
     return;
   }
 
@@ -111,15 +113,37 @@ function renderMenu() {
         <div class="stall-heading">
           <h2>${escapeHtml(group.stallName)}</h2>
           <span class="badge cuisine-badge">${escapeHtml(group.cuisineType)}</span>
+          <span class="stall-rating" id="stall-rating-${group.stallId}">${t('reviewsLoading')}</span>
         </div>
         <div class="menu-grid">
           ${group.items.map(buildItemCard).join('')}
         </div>
+        ${buildReviewsPanel(group.stallId)}
       </div>
     `;
   }
 
   container.innerHTML = html;
+  renderLoadedReviews();
+}
+
+function buildReviewsPanel(stallId) {
+  const sort = reviewSorts.get(stallId) || 'newest';
+
+  return `
+    <div class="reviews-panel" id="reviews-panel-${stallId}">
+      <div class="reviews-panel-header">
+        <h3>${t('ratingsReviews')}</h3>
+        <select class="form-select review-sort" data-stall-id="${stallId}" aria-label="Sort reviews">
+          <option value="newest"${sort === 'newest' ? ' selected' : ''}>${t('newest')}</option>
+          <option value="highest"${sort === 'highest' ? ' selected' : ''}>${t('highestRating')}</option>
+        </select>
+      </div>
+      <div class="reviews-list" id="reviews-list-${stallId}">
+        <div class="reviews-empty">${t('loadingReviews')}</div>
+      </div>
+    </div>
+  `;
 }
 
 function buildItemCard(item) {
@@ -132,7 +156,7 @@ function buildItemCard(item) {
         <div class="menu-card-header">
           <h3 class="menu-card-name">${escapeHtml(item.Name)}</h3>
           <span class="badge ${isAvail ? 'badge-available' : 'badge-unavailable'}">
-            ${isAvail ? 'Available' : 'Unavailable'}
+            ${isAvail ? t('available') : t('unavailable')}
           </span>
         </div>
         ${item.Description ? `<p class="menu-card-desc">${escapeHtml(item.Description)}</p>` : ''}
@@ -151,7 +175,7 @@ function buildItemCard(item) {
             <button type="button" class="qty-btn qty-inc" data-item-id="${item.MenuItemId}" aria-label="Increase quantity">+</button>
           </div>
           <button type="button" class="btn btn-primary btn-add-cart" data-item-id="${item.MenuItemId}">
-            Add to cart
+            ${t('addToCart')}
           </button>
         ` : `
           <div class="qty-stepper disabled-stepper">
@@ -160,7 +184,7 @@ function buildItemCard(item) {
             <button type="button" class="qty-btn" disabled>+</button>
           </div>
           <button type="button" class="btn btn-add-cart btn-add-cart--disabled" disabled>
-            Unavailable
+            ${t('unavailable')}
           </button>
         `}
       </div>
@@ -200,6 +224,79 @@ function attachMenuEvents() {
       handleAddToCart(itemId, target);
     }
   });
+
+  content.addEventListener('change', (e) => {
+    const target = e.target;
+    if (!target.classList.contains('review-sort')) return;
+
+    const stallId = Number(target.dataset.stallId);
+    reviewSorts.set(stallId, target.value);
+    loadStallReviews(stallId, target.value);
+  });
+}
+
+function renderLoadedReviews() {
+  for (const [stallId, data] of stallReviews.entries()) {
+    renderStallReviews(stallId, data);
+  }
+}
+
+async function loadAllStallReviews() {
+  const stallIds = [...new Set(allItems.map((item) => item.StallId))];
+  await Promise.all(stallIds.map((stallId) => loadStallReviews(stallId, reviewSorts.get(stallId) || 'newest')));
+}
+
+async function loadStallReviews(stallId, sort) {
+  const listEl = document.getElementById(`reviews-list-${stallId}`);
+  if (listEl) {
+    listEl.innerHTML = `<div class="reviews-empty">${t('loadingReviews')}</div>`;
+  }
+
+  try {
+    const data = await api(`/stalls/${stallId}/reviews?sort=${encodeURIComponent(sort)}`);
+    stallReviews.set(stallId, data);
+    renderStallReviews(stallId, data);
+  } catch (err) {
+    if (listEl) {
+      listEl.innerHTML = `<div class="reviews-empty">${t('failedReviews')}: ${escapeHtml(err.message)}</div>`;
+    }
+  }
+}
+
+function renderStallReviews(stallId, data) {
+  const ratingEl = document.getElementById(`stall-rating-${stallId}`);
+  const listEl = document.getElementById(`reviews-list-${stallId}`);
+  const summary = data.summary || {};
+  const reviews = data.reviews || [];
+  const reviewCount = Number(summary.ReviewCount || 0);
+  const average = Number(summary.AverageRating || 0);
+
+  if (ratingEl) {
+    ratingEl.textContent = reviewCount > 0
+      ? `${average.toFixed(1)} / 5 (${reviewCount} ${t(reviewCount === 1 ? 'review' : 'reviews')})`
+      : t('noReviews');
+  }
+
+  if (!listEl) return;
+
+  if (reviews.length === 0) {
+    listEl.innerHTML = `<div class="reviews-empty">${t('noReviews')}</div>`;
+    return;
+  }
+
+  listEl.innerHTML = reviews.map((review) => {
+    const date = review.CreatedAt ? new Date(review.CreatedAt).toLocaleDateString() : '';
+    return `
+      <article class="review-item">
+        <div class="review-item-header">
+          <strong>${escapeHtml(review.Username || t('customer'))}</strong>
+          <span>${escapeHtml(String(review.Rating))} / 5</span>
+        </div>
+        <p>${escapeHtml(review.Comment)}</p>
+        ${date ? `<div class="review-date">${escapeHtml(date)}</div>` : ''}
+      </article>
+    `;
+  }).join('');
 }
 
 async function handleLike(menuItemId, buttonEl) {
@@ -256,7 +353,7 @@ function handleAddToCart(menuItemId, buttonEl) {
 
   // Visual confirmation
   const originalText = buttonEl.textContent;
-  buttonEl.textContent = 'Added \u2713';
+  buttonEl.textContent = `${t('added')} \u2713`;
   buttonEl.classList.add('btn-add-cart--confirmed');
   buttonEl.disabled = true;
 
@@ -285,14 +382,16 @@ async function init() {
   } catch (err) {
     console.error('Failed to load menu:', err);
     if (content) {
-      content.innerHTML = '<div class="empty-state">Failed to load menu. Please try again later.</div>';
+      content.innerHTML = `<div class="empty-state">${t('failedMenu')}</div>`;
     }
     return;
   }
 
   renderCuisineFilter();
+  applyTranslations();
   renderMenu();
   attachMenuEvents();
+  loadAllStallReviews();
 }
 
 document.addEventListener('DOMContentLoaded', init);

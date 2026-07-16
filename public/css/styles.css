@@ -121,6 +121,23 @@ input, textarea, select {
   padding: 8px 12px;
 }
 
+.language-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.language-select {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+}
+
 /* ============================================================
    PAGE CONTAINER
 ============================================================ */
@@ -716,6 +733,7 @@ tr:hover td {
 .stall-heading {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 16px;
   padding-bottom: 10px;
@@ -732,6 +750,12 @@ tr:hover td {
   background: var(--primary-tint);
   color: var(--primary);
   font-size: 12px;
+}
+
+.stall-rating {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 /* Menu grid — 2 columns */
@@ -835,6 +859,73 @@ tr:hover td {
 .btn-like:disabled {
   cursor: not-allowed;
   opacity: 0.75;
+}
+
+.reviews-panel {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.reviews-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.reviews-panel-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.review-sort {
+  max-width: 180px;
+}
+
+.reviews-list {
+  display: grid;
+  gap: 10px;
+}
+
+.review-item {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.review-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.review-item-header span {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.review-item p {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.review-date,
+.reviews-empty {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.review-date {
+  margin-top: 6px;
 }
 
 /* Menu card actions */

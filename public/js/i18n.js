@@ -1,0 +1,173 @@
+"use strict";
+
+const LANGUAGE_KEY = "cowork_language";
+
+const translations = {
+  en: {
+    home: "Home",
+    cart: "Cart",
+    login: "Login",
+    register: "Register",
+    logout: "Logout",
+    orderHistory: "Order History",
+    feedbackComplaint: "Feedback / Complaint",
+    myStall: "My Stall",
+    analytics: "Analytics",
+    language: "Language",
+    browseMenu: "Browse Menu",
+    browseMenuSubtitle: "Discover delicious food from campus stalls",
+    cuisine: "Cuisine",
+    allCuisines: "All Cuisines",
+    loadingMenu: "Loading menu...",
+    noMenuItems: "No menu items found.",
+    failedMenu: "Failed to load menu. Please try again later.",
+    available: "Available",
+    unavailable: "Unavailable",
+    addToCart: "Add to cart",
+    added: "Added",
+    reviewsLoading: "Reviews loading...",
+    ratingsReviews: "Ratings & Reviews",
+    newest: "Newest",
+    highestRating: "Highest rating",
+    loadingReviews: "Loading reviews...",
+    noReviews: "No reviews yet.",
+    failedReviews: "Failed to load reviews",
+    customer: "Customer",
+    review: "review",
+    reviews: "reviews",
+    feedbackComplaintTitle: "Feedback & Complaint",
+    feedbackComplaintSubtitle: "Share your experience or report an issue for a campus stall",
+    type: "Type",
+    feedback: "Feedback",
+    complaint: "Complaint",
+    foodStall: "Food Stall",
+    selectStall: "Select a stall",
+    rating: "Rating",
+    selectRating: "Select a rating",
+    excellent: "Excellent",
+    good: "Good",
+    okay: "Okay",
+    poor: "Poor",
+    veryPoor: "Very poor",
+    category: "Category",
+    selectCategory: "Select a category",
+    poorHygiene: "Poor hygiene",
+    badService: "Bad service",
+    wrongOrder: "Wrong order",
+    foodQuality: "Food quality",
+    other: "Other",
+    comment: "Comment",
+    feedbackPlaceholder: "Tell us what stood out about the food or service",
+    complaintPlaceholder: "Describe what happened",
+    submitFeedback: "Submit Feedback",
+    submitComplaint: "Submit Complaint",
+    submitting: "Submitting...",
+    feedbackSuccess: "Feedback submitted successfully.",
+    complaintSuccess: "Complaint submitted successfully.",
+    chooseStall: "Please select a food stall.",
+    chooseRating: "Please select a rating from 1 to 5.",
+    chooseCategory: "Please select a complaint category.",
+    enterComment: "Please enter a comment.",
+    customerOnlyFeedback: "Only customer accounts can submit feedback.",
+    loadStallsFailed: "Failed to load stalls"
+  },
+  zh: {
+    home: "主页",
+    cart: "购物车",
+    login: "登录",
+    register: "注册",
+    logout: "登出",
+    orderHistory: "订单记录",
+    feedbackComplaint: "反馈 / 投诉",
+    myStall: "我的摊位",
+    analytics: "分析",
+    language: "语言",
+    browseMenu: "浏览菜单",
+    browseMenuSubtitle: "探索校园摊位的美食",
+    cuisine: "菜系",
+    allCuisines: "所有菜系",
+    loadingMenu: "正在加载菜单...",
+    noMenuItems: "没有找到菜单项目。",
+    failedMenu: "菜单加载失败，请稍后再试。",
+    available: "可购买",
+    unavailable: "暂不可购买",
+    addToCart: "加入购物车",
+    added: "已加入",
+    reviewsLoading: "正在加载评价...",
+    ratingsReviews: "评分与评价",
+    newest: "最新",
+    highestRating: "最高评分",
+    loadingReviews: "正在加载评价...",
+    noReviews: "暂无评价。",
+    failedReviews: "评价加载失败",
+    customer: "顾客",
+    review: "条评价",
+    reviews: "条评价",
+    feedbackComplaintTitle: "反馈与投诉",
+    feedbackComplaintSubtitle: "分享你的体验或举报校园摊位的问题",
+    type: "类型",
+    feedback: "反馈",
+    complaint: "投诉",
+    foodStall: "食物摊位",
+    selectStall: "选择摊位",
+    rating: "评分",
+    selectRating: "选择评分",
+    excellent: "非常好",
+    good: "好",
+    okay: "普通",
+    poor: "差",
+    veryPoor: "很差",
+    category: "类别",
+    selectCategory: "选择类别",
+    poorHygiene: "卫生问题",
+    badService: "服务不好",
+    wrongOrder: "订单错误",
+    foodQuality: "食物质量",
+    other: "其他",
+    comment: "留言",
+    feedbackPlaceholder: "告诉我们食物或服务哪里让你印象深刻",
+    complaintPlaceholder: "描述发生了什么",
+    submitFeedback: "提交反馈",
+    submitComplaint: "提交投诉",
+    submitting: "提交中...",
+    feedbackSuccess: "反馈提交成功。",
+    complaintSuccess: "投诉提交成功。",
+    chooseStall: "请选择食物摊位。",
+    chooseRating: "请选择 1 到 5 的评分。",
+    chooseCategory: "请选择投诉类别。",
+    enterComment: "请输入留言。",
+    customerOnlyFeedback: "只有顾客账户可以提交反馈。",
+    loadStallsFailed: "摊位加载失败"
+  }
+};
+
+function getLanguage() {
+  const language = localStorage.getItem(LANGUAGE_KEY);
+  return translations[language] ? language : "en";
+}
+
+function setLanguage(language) {
+  localStorage.setItem(LANGUAGE_KEY, translations[language] ? language : "en");
+}
+
+function t(key) {
+  const language = getLanguage();
+  return translations[language][key] || translations.en[key] || key;
+}
+
+function applyTranslations(root = document) {
+  document.documentElement.lang = getLanguage() === "zh" ? "zh" : "en";
+
+  root.querySelectorAll("[data-i18n]").forEach((el) => {
+    el.textContent = t(el.dataset.i18n);
+  });
+
+  root.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+}
+
+function handleLanguageChange(event) {
+  setLanguage(event.target.value);
+  window.location.reload();
+}

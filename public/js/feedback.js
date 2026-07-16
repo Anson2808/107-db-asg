@@ -16,22 +16,34 @@ async function loadStalls() {
   const data = await api("/stalls");
   const stalls = data.stalls || [];
 
-  select.innerHTML = '<option value="">Select a stall</option>' +
+  select.innerHTML = `<option value="">${t("selectStall")}</option>` +
     stalls.map((stall) => (
       `<option value="${stall.StallId}">${escapeHtml(stall.StallName)} (${escapeHtml(stall.CuisineType)})</option>`
     )).join("");
 }
 
 function validateFeedbackForm(payload) {
-  if (!payload.stallId) return "Please select a food stall.";
+  if (!payload.stallId) return t("chooseStall");
   if (payload.type === "feedback" && (!payload.rating || payload.rating < 1 || payload.rating > 5)) {
-    return "Please select a rating from 1 to 5.";
+    return t("chooseRating");
   }
   if (payload.type === "complaint" && !payload.category) {
-    return "Please select a complaint category.";
+    return t("chooseCategory");
   }
-  if (!payload.comment) return "Please enter a comment.";
+  if (!payload.comment) return t("enterComment");
   return "";
+}
+
+function renderRatingOptions() {
+  const rating = document.getElementById("rating");
+  rating.innerHTML = `
+    <option value="">${t("selectRating")}</option>
+    <option value="5">5 - ${t("excellent")}</option>
+    <option value="4">4 - ${t("good")}</option>
+    <option value="3">3 - ${t("okay")}</option>
+    <option value="2">2 - ${t("poor")}</option>
+    <option value="1">1 - ${t("veryPoor")}</option>
+  `;
 }
 
 function updateFormMode() {
@@ -48,8 +60,8 @@ function updateFormMode() {
   categoryGroup.style.display = isComplaint ? "" : "none";
   rating.required = !isComplaint;
   category.required = isComplaint;
-  comment.placeholder = isComplaint ? "Describe what happened" : "Tell us what stood out about the food or service";
-  submitBtn.textContent = isComplaint ? "Submit Complaint" : "Submit Feedback";
+  comment.placeholder = isComplaint ? t("complaintPlaceholder") : t("feedbackPlaceholder");
+  submitBtn.textContent = isComplaint ? t("submitComplaint") : t("submitFeedback");
 }
 
 async function handleFeedbackSubmit(event) {
@@ -72,7 +84,7 @@ async function handleFeedbackSubmit(event) {
   }
 
   submitBtn.disabled = true;
-  submitBtn.textContent = "Submitting...";
+  submitBtn.textContent = t("submitting");
 
   try {
     const path = type === "complaint" ? "/complaints" : "/feedback";
@@ -95,7 +107,7 @@ async function handleFeedbackSubmit(event) {
 
     event.target.reset();
     updateFormMode();
-    showFeedbackMessage(type === "complaint" ? "Complaint submitted successfully." : "Feedback submitted successfully.", "success");
+    showFeedbackMessage(type === "complaint" ? t("complaintSuccess") : t("feedbackSuccess"), "success");
   } catch (err) {
     showFeedbackMessage(err.message, "error");
   } finally {
@@ -113,7 +125,7 @@ async function initFeedbackPage() {
   }
 
   if (!isRole("customer")) {
-    showFeedbackMessage("Only customer accounts can submit feedback.", "error");
+    showFeedbackMessage(t("customerOnlyFeedback"), "error");
     document.getElementById("feedbackForm").style.display = "none";
     return;
   }
@@ -121,9 +133,11 @@ async function initFeedbackPage() {
   try {
     await loadStalls();
   } catch (err) {
-    showFeedbackMessage("Failed to load stalls: " + err.message, "error");
+    showFeedbackMessage(`${t("loadStallsFailed")}: ${err.message}`, "error");
   }
 
+  renderRatingOptions();
+  applyTranslations();
   document.getElementById("requestType").addEventListener("change", updateFormMode);
   updateFormMode();
   document.getElementById("feedbackForm").addEventListener("submit", handleFeedbackSubmit);

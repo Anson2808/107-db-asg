@@ -1,5 +1,6 @@
 const { getAllStalls, getStallByOwnerId, updateStall } = require("../models/stallModel");
 const { getMenuByStallId } = require("../models/menuModel");
+const { getReviewsByStallId, getReviewSummaryByStallId } = require("../models/feedbackModel");
 
 exports.getAllStalls = async (req, res, next) => {
   try {
@@ -20,6 +21,22 @@ exports.getMyStall = async (req, res, next) => {
     const menu = await getMenuByStallId(stall.StallId);
 
     res.status(200).json({ stall, menu });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getStallReviews = async (req, res, next) => {
+  try {
+    const stallId = Number(req.params.id);
+    const sort = req.query.sort === "highest" ? "highest" : "newest";
+
+    const [summary, reviews] = await Promise.all([
+      getReviewSummaryByStallId(stallId),
+      getReviewsByStallId(stallId, sort),
+    ]);
+
+    res.status(200).json({ summary, reviews });
   } catch (err) {
     next(err);
   }

@@ -50,6 +50,7 @@ app.post("/api/auth/login", validate(loginSchema), authController.login);
 // Stall routes (owner only)
 const stallController = require("./controllers/stallController");
 app.get("/api/stalls", stallController.getAllStalls);
+app.get("/api/stalls/:id/reviews", stallController.getStallReviews);
 app.get("/api/stalls/my", verifyJWT, requireRole("stallOwner"), stallController.getMyStall);
 app.put("/api/stalls/my", verifyJWT, requireRole("stallOwner"), validate(updateStallSchema), stallController.updateMyStall);
 
