@@ -41,6 +41,29 @@ const CART_CONFIG = Object.freeze({
   MIN_QUANTITY: 1                      // quantity can never drop below this
 });
 
+// Images are intentionally used only in the cart. Keys match MenuItemId values
+// from database/seed.sql, so a selected cart item always receives its own photo.
+const MENU_IMAGE_PATHS = Object.freeze({
+  1: "/menu_image/rotijohnclassic.jpg",
+  2: "/menu_image/chickenrotijohn.jpeg",
+  3: "/menu_image/cheeserotijohn.jpeg",
+  4: "/menu_image/muttonkebabwrap.jpg",
+  5: "/menu_image/currypuff.jpg",
+  6: "/menu_image/tehtarik.jpg",
+  7: "/menu_image/charkwayteow.jpg",
+  8: "/menu_image/hokkienmee.jpg",
+  9: "/menu_image/sweetandsourchickenrice.jpg",
+  10: "/menu_image/wontonnoodlesoup.jpg",
+  11: "/menu_image/springroll.jpg",
+  12: "/menu_image/icelemontea.jpg",
+  13: "/menu_image/chickenbiryani.jpg",
+  14: "/menu_image/butterchicken.jpg",
+  15: "/menu_image/garlicnaan.jpg",
+  16: "/menu_image/vegetablesamosa.jpg",
+  17: "/menu_image/mangolassi.jpg",
+  18: "/menu_image/masalachai.jpg",
+});
+
 /* ============================================================
    IN-MEMORY STATE
 ============================================================ */
@@ -274,6 +297,10 @@ function getMenuItemById(menuItemId) {
   return menuItemsCache.find((item) => item.menuItemId === menuItemId) || null;
 }
 
+function getMenuItemImage(menuItemId) {
+  return MENU_IMAGE_PATHS[menuItemId] || "/menu_image/menu.jpeg";
+}
+
 /* ============================================================
    TOTALS CALCULATION
 ============================================================ */
@@ -466,7 +493,7 @@ function buildCartItemMarkup(cartItem) {
   return `
     <li class="cart-item" data-item-id="${menuItem.menuItemId}">
       <div class="cart-item-image">
-        <img src="assets/food-placeholder.jpg" alt="${menuItem.name}">
+        <img src="${getMenuItemImage(menuItem.menuItemId)}" alt="${menuItem.name}" onerror="this.src='/menu_image/menu.jpeg'">
       </div>
       <div class="cart-item-details">
         <h3 class="cart-item-name">${menuItem.name}</h3>

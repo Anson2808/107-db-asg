@@ -13,6 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static frontend from public/
 app.use(express.static(path.join(__dirname, "public")));
+app.use("/menu_image", express.static(path.join(__dirname, "menu_image")));
 
 // Health check
 app.get("/api/health", (req, res) => {
