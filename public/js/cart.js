@@ -117,33 +117,16 @@ async function fetchMenuItems() {
 }
 
 /**
- * Mock GET /api/cart?userId=...
- * Simulates: SELECT * FROM CartItems WHERE UserId = @userId
- * TODO: Replace with a real fetch(`/api/cart/${userId}`) call
- *       once the Express route + SQL Server query exist.
+ * GET /api/cart — fetches user's cart from database.
  */
-async function getCartFromAPI(userId) {
-  await mockDelay(150);
-  // TODO: implement real GET request to Express API
-  // TODO: Express route should run:
-  //   SELECT CartItemId, MenuItemId, Quantity FROM CartItems WHERE UserId = @userId
-  console.warn('getCartFromAPI() is a placeholder — no backend connected yet.', { userId });
-  return [];
-}
-
-/**
- * Mock POST/PUT /api/cart
- * Simulates: MERGE/UPSERT into CartItems (UserId, MenuItemId, Quantity)
- * TODO: Replace with a real fetch('/api/cart', { method: 'POST', ... })
- *       call once the Express route + SQL Server query exist.
- */
-async function saveCartToAPI(userId, items) {
-  await mockDelay(150);
-  // TODO: implement real POST/PUT request to Express API
-  // TODO: Express route should upsert into CartItems per
-  //   (UserId, MenuItemId) using UQ_Cart_User_Item constraint
-  console.warn('saveCartToAPI() is a placeholder — no backend connected yet.', { userId, items });
-  return { success: true };
+async function fetchCart() {
+  try {
+    const res = await api('/cart');
+    cartItems = res.cart || [];
+  } catch (error) {
+    console.error('Failed to fetch cart:', error);
+    cartItems = [];
+  }
 }
 
 /**
@@ -159,127 +142,94 @@ async function createOrder(orderPayload) {
   });
 }
 
-/**
- * Small helper to simulate network latency in mock functions.
- */
-function mockDelay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/* ============================================================
-   LOCAL STORAGE PERSISTENCE
-============================================================ */
-
-/**
- * loadCart()
- * Reads the cart from localStorage into the in-memory cartItems
- * array. Falls back to an empty cart if nothing is stored or
- * the stored data is corrupted.
- */
-function loadCart() {
-  try {
-    const rawCart = localStorage.getItem(CART_CONFIG.STORAGE_KEY);
-    cartItems = rawCart ? JSON.parse(rawCart) : [];
-  } catch (error) {
-    console.error('Failed to load cart from localStorage. Resetting cart.', error);
-    cartItems = [];
-  }
-  return cartItems;
-}
-
-/**
- * saveCart()
- * Persists the in-memory cartItems array into localStorage.
- */
-function saveCart() {
-  try {
-    localStorage.setItem(CART_CONFIG.STORAGE_KEY, JSON.stringify(cartItems));
-  } catch (error) {
-    console.error('Failed to save cart to localStorage.', error);
-  }
-}
-
-/**
- * clearCart()
- * Empties the cart both in memory and in localStorage, then
- * re-renders the UI to reflect the empty state.
- */
-function clearCart() {
-  cartItems = [];
-  saveCart();
-  renderCart();
-}
-
 /* ============================================================
    CART MUTATION FUNCTIONS
 ============================================================ */
 
 /**
  * addToCart(menuItemId, quantity, specialInstructions)
- * Adds a menu item to the cart. If it already exists, increases
- * its quantity instead of creating a duplicate row (mirrors the
- * UQ_Cart_User_Item unique constraint on CartItems).
+ * Adds a menu item to the cart in the database.
  */
-function addToCart(menuItemId, quantity = 1, specialInstructions = '') {
-  const menuItem = getMenuItemById(menuItemId);
-
-  if (!menuItem) {
-    console.error(`addToCart failed: MenuItemId ${menuItemId} not found in menuItemsCache.`);
-    return;
-  }
-
-  if (!menuItem.isAvailable) {
-    console.warn(`addToCart blocked: "${menuItem.name}" is currently unavailable.`);
-    return;
-  }
-
-  const existingItem = cartItems.find((item) => item.menuItemId === menuItemId);
-
-  if (existingItem) {
-    existingItem.quantity += quantity;
-  } else {
-    cartItems.push({
-      menuItemId,
-      quantity: Math.max(quantity, CART_CONFIG.MIN_QUANTITY),
-      specialInstructions // UI-only field, see schema note #4
+async function addToCart(menuItemId, quantity = 1, specialInstructions = '') {
+  try {
+    await api('/cart', {
+      method: 'POST',
+      body: JSON.stringify({ menuItemId, quantity })
     });
+    await fetchCart();
+    renderCart();
+    await updateCartBadge();
+  } catch (error) {
+    console.error('addToCart failed:', error);
+    alert(error.message || 'Failed to add item to cart');
   }
-
-  saveCart();
-  renderCart();
 }
 
 /**
  * removeFromCart(menuItemId)
- * Removes a single cart line entirely, regardless of quantity.
+ * Removes a single cart line entirely from the database.
  */
-function removeFromCart(menuItemId) {
-  cartItems = cartItems.filter((item) => item.menuItemId !== menuItemId);
-  saveCart();
-  renderCart();
+async function removeFromCart(menuItemId) {
+  const item = cartItems.find((c) => c.menuItemId === menuItemId);
+  if (!item) {
+    console.error(`removeFromCart failed: menuItemId ${menuItemId} not in cart`);
+    return;
+  }
+  try {
+    await api(`/cart/${item.cartItemId}`, { method: 'DELETE' });
+    await fetchCart();
+    renderCart();
+    await updateCartBadge();
+  } catch (error) {
+    console.error('removeFromCart failed:', error);
+    alert(error.message || 'Failed to remove item from cart');
+  }
 }
 
 /**
  * updateQuantity(menuItemId, delta)
- * Increases or decreases a cart line's quantity by `delta`
- * (typically +1 or -1). Quantity is never allowed to drop
- * below CART_CONFIG.MIN_QUANTITY — use removeFromCart() to
- * delete a line entirely.
+ * Increases or decreases a cart line's quantity in the database.
  */
-function updateQuantity(menuItemId, delta) {
-  const cartItem = cartItems.find((item) => item.menuItemId === menuItemId);
-
-  if (!cartItem) {
-    console.error(`updateQuantity failed: MenuItemId ${menuItemId} not in cart.`);
+async function updateQuantity(menuItemId, delta) {
+  const item = cartItems.find((c) => c.menuItemId === menuItemId);
+  if (!item) {
+    console.error(`updateQuantity failed: menuItemId ${menuItemId} not in cart`);
     return;
   }
 
-  const nextQuantity = cartItem.quantity + delta;
+  const newQty = item.quantity + delta;
+  if (newQty < CART_CONFIG.MIN_QUANTITY) {
+    await removeFromCart(menuItemId);
+    return;
+  }
 
-  // Prevent quantity below the configured minimum
-  cartItem.quantity = Math.max(nextQuantity, CART_CONFIG.MIN_QUANTITY);
+  try {
+    await api(`/cart/${item.cartItemId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ quantity: newQty })
+    });
+    await fetchCart();
+    renderCart();
+    await updateCartBadge();
+  } catch (error) {
+    console.error('updateQuantity failed:', error);
+    alert(error.message || 'Failed to update quantity');
+  }
+}
 
-  saveCart();
+/**
+ * clearCart()
+ * Empties the cart by deleting each item sequentially.
+ */
+async function clearCart() {
+  try {
+    for (const item of cartItems) {
+      await api(`/cart/${item.cartItemId}`, { method: 'DELETE' });
+    }
+  } catch (err) {
+    console.error('Failed to clear cart:', err);
+  }
+  await fetchCart();
   renderCart();
 }
 
@@ -485,6 +435,7 @@ function buildCartItemMarkup(cartItem) {
   const menuItem = getMenuItemById(cartItem.menuItemId);
 
   if (!menuItem) {
+    console.warn(`buildCartItemMarkup: MenuItemId ${cartItem.menuItemId} not found in menuItemsCache!`, { cartItem, menuItemsCache });
     return '';
   }
 
@@ -647,15 +598,21 @@ function attachCartEventListeners() {
  * up event listeners.
  */
 async function initCart() {
-  loadCart();
+  if (!isLoggedIn()) {
+    window.location.href = '/login.html';
+    return;
+  }
 
   try {
     menuItemsCache = await fetchMenuItems();
+    await fetchCart();
   } catch (error) {
-    console.error('Failed to load menu items.', error);
+    console.error('Failed to initialize cart page.', error);
     menuItemsCache = [];
+    cartItems = [];
   }
 
+  console.log("initCart: menuItemsCache =", menuItemsCache, "cartItems =", cartItems);
   renderCart();
   attachCartEventListeners();
 }

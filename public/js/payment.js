@@ -6,10 +6,7 @@ let menuById = new Map();
 
 function currency(value) { return `$${Number(value).toFixed(2)}`; }
 
-function readCart() {
-  try { return JSON.parse(localStorage.getItem(PAYMENT_CONFIG.storageKey)) || []; }
-  catch { return []; }
-}
+// readCart() helper removed; database API used instead.
 
 async function loadMenu() {
   const data = await api('/menu');
@@ -58,8 +55,7 @@ async function submitPayment(event) {
   try {
     const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
     const { order } = await api('/orders', { method: 'POST', body: JSON.stringify({ items, paymentMethod }) });
-    localStorage.removeItem(PAYMENT_CONFIG.storageKey);
-    updateCartBadge();
+    await updateCartBadge();
     message.textContent = `Order #${order.orderId} placed successfully. Redirecting…`;
     message.classList.add('success');
     setTimeout(() => { window.location.href = '/order-history.html'; }, 900);
@@ -74,8 +70,13 @@ async function submitPayment(event) {
 document.addEventListener('DOMContentLoaded', async () => {
   renderNavbar();
   if (!isLoggedIn()) { window.location.href = '/login.html'; return; }
-  paymentCart = readCart();
-  try { await loadMenu(); renderSummary(); }
-  catch (error) { document.getElementById('payment-message').textContent = 'Unable to load your order. Please try again.'; }
+  try {
+    await loadMenu();
+    const cartRes = await api('/cart');
+    paymentCart = cartRes.cart || [];
+    renderSummary();
+  } catch (error) {
+    document.getElementById('payment-message').textContent = 'Unable to load your order. Please try again.';
+  }
   document.getElementById('payment-form').addEventListener('submit', submitPayment);
 });

@@ -122,23 +122,27 @@ function escapeHtml(str) {
 }
 
 /**
- * Reads freshbite_cart from localStorage and updates the cart badge
- * in the navbar to show the total quantity.  Call this after any
+ * Fetches the cart items from the backend and updates the cart badge
+ * in the navbar to show the total quantity. Call this after any
  * add/remove/clear to keep the badge in sync.
  */
-function updateCartBadge() {
+async function updateCartBadge() {
   const badge = document.getElementById("cart-badge");
   if (!badge) return;
 
-  let totalQty = 0;
-  try {
-    const raw = localStorage.getItem("freshbite_cart");
-    const cart = raw ? JSON.parse(raw) : [];
-    totalQty = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
-  } catch (e) {
-    totalQty = 0;
+  if (!isLoggedIn()) {
+    badge.style.display = "none";
+    return;
   }
 
-  badge.textContent = totalQty;
-  badge.style.display = totalQty > 0 ? "" : "none";
+  try {
+    const res = await api("/cart");
+    const cart = res.cart || [];
+    const totalQty = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
+    badge.textContent = totalQty;
+    badge.style.display = totalQty > 0 ? "" : "none";
+  } catch (e) {
+    console.error("Failed to update cart badge:", e);
+    badge.style.display = "none";
+  }
 }

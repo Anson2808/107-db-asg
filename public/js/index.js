@@ -9,42 +9,9 @@
 'use strict';
 
 /* ============================================================
-   CART HELPERS — mirrors addToCart() logic in cart.js
+   CART HELPERS — Direct Backend Database Integration
 ============================================================ */
-
-const CART_KEY = 'freshbite_cart';
-
-function readCart() {
-  try {
-    const raw = localStorage.getItem(CART_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function writeCart(cart) {
-  localStorage.setItem(CART_KEY, JSON.stringify(cart));
-}
-
-/**
- * addToCartLocal(menuItemId, quantity)
- * Same merge semantics as cart.js addToCart():
- *   - existing item → increase quantity
- *   - new item     → push { menuItemId, quantity, specialInstructions: "" }
- */
-function addToCartLocal(menuItemId, quantity) {
-  const cart = readCart();
-  const existing = cart.find((item) => item.menuItemId === menuItemId);
-
-  if (existing) {
-    existing.quantity += quantity;
-  } else {
-    cart.push({ menuItemId, quantity, specialInstructions: '' });
-  }
-
-  writeCart(cart);
-}
+// Local storage cart functions removed; database API used instead.
 
 /* ============================================================
    STATE
@@ -343,28 +310,47 @@ function changeQty(itemId, delta) {
   span.textContent = val;
 }
 
-function handleAddToCart(menuItemId, buttonEl) {
+async function handleAddToCart(menuItemId, buttonEl) {
+  if (!isLoggedIn()) {
+    window.location.href = '/login.html';
+    return;
+  }
+
+  if (!isRole('customer')) {
+    alert('Only customers can add items to the cart.');
+    return;
+  }
+
   // Read current qty from the stepper
   const qtySpan = document.getElementById(`qty-${menuItemId}`);
   const qty = qtySpan ? Math.max(1, parseInt(qtySpan.textContent, 10) || 1) : 1;
 
-  // Write to localStorage (merge logic)
-  addToCartLocal(menuItemId, qty);
-
-  // Visual confirmation
-  const originalText = buttonEl.textContent;
-  buttonEl.textContent = `${t('added')} \u2713`;
-  buttonEl.classList.add('btn-add-cart--confirmed');
   buttonEl.disabled = true;
 
-  setTimeout(() => {
-    buttonEl.textContent = originalText;
-    buttonEl.classList.remove('btn-add-cart--confirmed');
-    buttonEl.disabled = false;
-  }, 1500);
+  try {
+    // Write to backend database cart
+    await api('/cart', {
+      method: 'POST',
+      body: JSON.stringify({ menuItemId, quantity: qty })
+    });
 
-  // Update cart badge in navbar
-  updateCartBadge();
+    // Visual confirmation
+    const originalText = buttonEl.textContent;
+    buttonEl.textContent = `${t('added')} \u2713`;
+    buttonEl.classList.add('btn-add-cart--confirmed');
+
+    setTimeout(() => {
+      buttonEl.textContent = originalText;
+      buttonEl.classList.remove('btn-add-cart--confirmed');
+      buttonEl.disabled = false;
+    }, 1500);
+
+    // Update cart badge in navbar
+    await updateCartBadge();
+  } catch (err) {
+    alert(err.message || 'Failed to add item to cart');
+    buttonEl.disabled = false;
+  }
 }
 
 /* ============================================================
