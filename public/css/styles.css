@@ -815,6 +815,28 @@ tr:hover td {
   color: var(--text-secondary);
 }
 
+.btn-like {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  background: var(--bg);
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-like:hover,
+.btn-like--liked {
+  background: var(--danger-tint);
+  color: var(--danger);
+}
+
+.btn-like:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
 /* Menu card actions */
 .menu-card-actions {
   display: flex;

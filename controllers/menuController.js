@@ -3,6 +3,7 @@ const {
   getAllMenuItems,
   createMenuItem,
   getMenuItemById,
+  likeMenuItem,
   updateMenuItem,
   deleteMenuItem,
 } = require("../models/menuModel");
@@ -36,6 +37,28 @@ exports.addMenuItem = async (req, res, next) => {
     const item = await getMenuItemById(menuItemId);
 
     res.status(201).json({ item });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.likeMenuItem = async (req, res, next) => {
+  try {
+    const item = await getMenuItemById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ error: "Menu item not found" });
+    }
+
+    const result = await likeMenuItem({
+      menuItemId: item.MenuItemId,
+      userId: req.user.userId,
+    });
+
+    res.status(200).json({
+      message: result.alreadyLiked ? "You have already liked this item" : "Menu item liked",
+      alreadyLiked: result.alreadyLiked,
+      item: result.item,
+    });
   } catch (err) {
     next(err);
   }

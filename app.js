@@ -33,6 +33,8 @@ const {
   createOrderSchema,
   addToCartSchema,
   updateCartQuantitySchema,
+  feedbackSchema,
+  complaintSchema,
 } = require("./middlewares/validateMiddleware");
 const { verifyJWT, requireRole } = require("./middlewares/authMiddleware");
 
@@ -47,6 +49,7 @@ app.post("/api/auth/login", validate(loginSchema), authController.login);
 
 // Stall routes (owner only)
 const stallController = require("./controllers/stallController");
+app.get("/api/stalls", stallController.getAllStalls);
 app.get("/api/stalls/my", verifyJWT, requireRole("stallOwner"), stallController.getMyStall);
 app.put("/api/stalls/my", verifyJWT, requireRole("stallOwner"), validate(updateStallSchema), stallController.updateMyStall);
 
@@ -54,6 +57,7 @@ app.put("/api/stalls/my", verifyJWT, requireRole("stallOwner"), validate(updateS
 const menuController = require("./controllers/menuController");
 app.get("/api/menu", menuController.getAllMenuItems); // public — browsing + cart
 app.post("/api/menu", verifyJWT, requireRole("stallOwner"), validate(createMenuItemSchema), menuController.addMenuItem);
+app.post("/api/menu/:id/like", verifyJWT, requireRole("customer"), menuController.likeMenuItem);
 app.put("/api/menu/:id", verifyJWT, requireRole("stallOwner"), validate(updateMenuItemSchema), menuController.updateMenuItem);
 app.delete("/api/menu/:id", verifyJWT, requireRole("stallOwner"), menuController.deleteMenuItem);
 
@@ -65,6 +69,14 @@ app.get("/api/analytics/performance", verifyJWT, requireRole("stallOwner"), anal
 const inspectionController = require("./controllers/inspectionController");
 app.get("/api/inspections/history", verifyJWT, requireRole("stallOwner"), inspectionController.getMyHygieneHistory);
 app.post("/api/inspections", verifyJWT, requireRole("stallOwner"), inspectionController.addMyHygieneRecord);
+
+// Feedback routes (customer only)
+const feedbackController = require("./controllers/feedbackController");
+app.post("/api/feedback", verifyJWT, requireRole("customer"), validate(feedbackSchema), feedbackController.submitFeedback);
+
+// Complaint routes (customer only)
+const complaintController = require("./controllers/complaintController");
+app.post("/api/complaints", verifyJWT, requireRole("customer"), validate(complaintSchema), complaintController.submitComplaint);
 
 // Order routes (any logged-in user)
 const orderController = require("./controllers/orderController");

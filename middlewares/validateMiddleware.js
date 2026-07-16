@@ -89,6 +89,22 @@ const updateCartQuantitySchema = Joi.object({
   quantity: Joi.number().integer().min(1).required(),
 });
 
+// Submit feedback schema
+const feedbackSchema = Joi.object({
+  stallId: Joi.number().integer().required(),
+  rating: Joi.number().integer().min(1).max(5).required(),
+  comment: Joi.string().trim().min(1).max(1000).required(),
+});
+
+// Submit complaint schema
+const complaintSchema = Joi.object({
+  stallId: Joi.number().integer().required(),
+  category: Joi.string()
+    .valid("Poor hygiene", "Bad service", "Wrong order", "Food quality", "Other")
+    .required(),
+  description: Joi.string().trim().min(1).max(1000).required(),
+});
+
 module.exports = {
   validate,
   registerSchema,
@@ -99,4 +115,6 @@ module.exports = {
   createOrderSchema,
   addToCartSchema,
   updateCartQuantitySchema,
+  feedbackSchema,
+  complaintSchema,
 };

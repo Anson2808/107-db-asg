@@ -46,6 +46,8 @@ function renderNavbar() {
     if (user.role === "stallOwner") {
       leftLinks += `<a href="/stall-dashboard.html">My Stall</a>`;
       leftLinks += `<a href="/stall-analytics.html">Analytics</a>`;
+    } else if (user.role === "customer") {
+      leftLinks += `<a href="/feedback.html">Feedback / Complaint</a>`;
     }
     leftLinks += `<a href="/order-history.html">Order History</a>`;
     rightLinks = `

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback & Complaint - CoWork</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<nav id="navbar"></nav>
+
+<main class="page-container">
+  <section class="menu-header">
+    <h1>Feedback & Complaint</h1>
+    <p>Share your experience or report an issue for a campus stall</p>
+  </section>
+
+  <section class="card feedback-card">
+    <div id="feedbackMessage" class="alert" style="display:none"></div>
+
+    <form id="feedbackForm" novalidate>
+      <div class="form-group">
+        <label for="requestType" class="form-label">Type</label>
+        <select id="requestType" class="form-select" required>
+          <option value="feedback">Feedback</option>
+          <option value="complaint">Complaint</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="stallId" class="form-label">Food Stall</label>
+        <select id="stallId" class="form-select" required>
+          <option value="">Select a stall</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="ratingGroup">
+        <label for="rating" class="form-label">Rating</label>
+        <select id="rating" class="form-select" required>
+          <option value="">Select a rating</option>
+          <option value="5">5 - Excellent</option>
+          <option value="4">4 - Good</option>
+          <option value="3">3 - Okay</option>
+          <option value="2">2 - Poor</option>
+          <option value="1">1 - Very poor</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="categoryGroup" style="display:none">
+        <label for="category" class="form-label">Category</label>
+        <select id="category" class="form-select">
+          <option value="">Select a category</option>
+          <option value="Poor hygiene">Poor hygiene</option>
+          <option value="Bad service">Bad service</option>
+          <option value="Wrong order">Wrong order</option>
+          <option value="Food quality">Food quality</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="comment" class="form-label">Comment</label>
+        <textarea id="comment" class="form-textarea" placeholder="Tell us what stood out about the food or service" required></textarea>
+      </div>
+
+      <button type="submit" id="submitFeedbackBtn" class="btn btn-primary">Submit Feedback</button>
+    </form>
+  </section>
+</main>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/feedback.js"></script>
+
+</body>
+</html>

@@ -14,6 +14,20 @@ async function getStallByOwnerId(ownerId) {
   return result.recordset[0];
 }
 
+async function getStallById(stallId) {
+  const result = await sql.query`SELECT * FROM Stalls WHERE StallId = ${stallId}`;
+  return result.recordset[0];
+}
+
+async function getAllStalls() {
+  const result = await sql.query`
+    SELECT StallId, StallName, CuisineType, Description, Status
+    FROM Stalls
+    ORDER BY StallName
+  `;
+  return result.recordset;
+}
+
 async function updateStall(stallId, fields) {
   const allowed = ["StallName", "Description", "CuisineType", "Status"];
   const setClauses = [];
@@ -45,4 +59,4 @@ async function updateStall(stallId, fields) {
   return true;
 }
 
-module.exports = { createStall, getStallByOwnerId, updateStall };
+module.exports = { createStall, getStallByOwnerId, getStallById, getAllStalls, updateStall };

@@ -1,5 +1,14 @@
-const { getStallByOwnerId, updateStall } = require("../models/stallModel");
+const { getAllStalls, getStallByOwnerId, updateStall } = require("../models/stallModel");
 const { getMenuByStallId } = require("../models/menuModel");
+
+exports.getAllStalls = async (req, res, next) => {
+  try {
+    const stalls = await getAllStalls();
+    res.status(200).json({ stalls });
+  } catch (err) {
+    next(err);
+  }
+};
 
 exports.getMyStall = async (req, res, next) => {
   try {

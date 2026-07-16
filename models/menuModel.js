@@ -35,6 +35,53 @@ async function getMenuItemById(menuItemId) {
   return result.recordset[0];
 }
 
+async function likeMenuItem({ menuItemId, userId }) {
+  const transaction = new sql.Transaction();
+
+  await transaction.begin();
+
+  try {
+    const request = new sql.Request(transaction);
+    request.input("menuItemId", sql.Int, menuItemId);
+    request.input("userId", sql.Int, userId);
+
+    const existing = await request.query(`
+      SELECT 1 AS AlreadyLiked
+      FROM MenuItemLikes
+      WHERE UserId = @userId AND MenuItemId = @menuItemId
+    `);
+
+    if (existing.recordset.length > 0) {
+      const current = await request.query(`
+        SELECT MenuItemId, LikeCount
+        FROM MenuItems
+        WHERE MenuItemId = @menuItemId
+      `);
+
+      await transaction.commit();
+      return { item: current.recordset[0], alreadyLiked: true };
+    }
+
+    await request.query(`
+      INSERT INTO MenuItemLikes (UserId, MenuItemId)
+      VALUES (@userId, @menuItemId)
+    `);
+
+    const updated = await request.query(`
+      UPDATE MenuItems
+      SET LikeCount = LikeCount + 1
+      OUTPUT INSERTED.MenuItemId, INSERTED.LikeCount
+      WHERE MenuItemId = @menuItemId
+    `);
+
+    await transaction.commit();
+    return { item: updated.recordset[0], alreadyLiked: false };
+  } catch (err) {
+    await transaction.rollback();
+    throw err;
+  }
+}
+
 async function updateMenuItem(menuItemId, fields) {
   const typeMap = {
     Name: sql.NVarChar,
@@ -82,6 +129,7 @@ module.exports = {
   getMenuByStallId,
   createMenuItem,
   getMenuItemById,
+  likeMenuItem,
   updateMenuItem,
   deleteMenuItem,
 };

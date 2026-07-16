@@ -138,7 +138,9 @@ function buildItemCard(item) {
         ${item.Description ? `<p class="menu-card-desc">${escapeHtml(item.Description)}</p>` : ''}
         <div class="menu-card-meta">
           <span class="menu-card-price">$${price}</span>
-          <span class="menu-card-likes" title="${item.LikeCount} likes">&#9829; ${item.LikeCount}</span>
+          <button type="button" class="menu-card-likes btn-like" data-like-id="${item.MenuItemId}" title="${item.LikeCount} likes">
+            &#9829; <span id="likes-${item.MenuItemId}">${item.LikeCount}</span>
+          </button>
         </div>
       </div>
       <div class="menu-card-actions">
@@ -176,6 +178,13 @@ function attachMenuEvents() {
 
   content.addEventListener('click', (e) => {
     const target = e.target;
+    const likeButton = target.closest('.btn-like');
+
+    if (likeButton) {
+      handleLike(Number(likeButton.dataset.likeId), likeButton);
+      return;
+    }
+
     const itemId = Number(target.dataset.itemId);
     if (!itemId) return;
 
@@ -191,6 +200,42 @@ function attachMenuEvents() {
       handleAddToCart(itemId, target);
     }
   });
+}
+
+async function handleLike(menuItemId, buttonEl) {
+  if (!isLoggedIn()) {
+    window.location.href = '/login.html';
+    return;
+  }
+
+  if (!isRole('customer')) {
+    buttonEl.title = 'Only customers can like menu items';
+    return;
+  }
+
+  buttonEl.disabled = true;
+
+  try {
+    const data = await api(`/menu/${menuItemId}/like`, { method: 'POST' });
+    const likeCount = data.item?.LikeCount;
+    const countEl = document.getElementById(`likes-${menuItemId}`);
+
+    if (countEl && likeCount !== undefined) {
+      countEl.textContent = likeCount;
+    }
+
+    buttonEl.classList.add('btn-like--liked');
+    buttonEl.title = data.message || 'Liked';
+
+    const item = allItems.find((entry) => entry.MenuItemId === menuItemId);
+    if (item && likeCount !== undefined) {
+      item.LikeCount = likeCount;
+    }
+  } catch (err) {
+    buttonEl.title = err.message;
+  } finally {
+    buttonEl.disabled = false;
+  }
 }
 
 function changeQty(itemId, delta) {
