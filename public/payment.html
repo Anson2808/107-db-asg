@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment | CoWork</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/payment.css">
+</head>
+<body>
+  <nav id="navbar"></nav>
+
+  <main class="payment-main">
+    <div class="payment-heading">
+      <a class="back-link" href="/cart.html">← Back to cart</a>
+      <h1>Secure payment</h1>
+      <p>Review your order and choose how you would like to pay.</p>
+    </div>
+
+    <div class="payment-layout">
+      <section class="payment-card" aria-labelledby="payment-method-title">
+        <div class="card-heading">
+          <span class="step-number">1</span>
+          <div>
+            <h2 id="payment-method-title">Payment method</h2>
+            <p>No real payment details are collected in this demo.</p>
+          </div>
+        </div>
+
+        <form id="payment-form">
+          <fieldset class="payment-options">
+            <legend class="sr-only">Choose a payment method</legend>
+            <label class="payment-option">
+              <input type="radio" name="paymentMethod" value="paynow" checked>
+              <span class="payment-option-icon">P</span>
+              <span><strong>PayNow</strong><small>Pay with your mobile banking app</small></span>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="paymentMethod" value="credit_card">
+              <span class="payment-option-icon">▣</span>
+              <span><strong>Credit card</strong><small>Demo card payment</small></span>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="paymentMethod" value="debit_card">
+              <span class="payment-option-icon">▣</span>
+              <span><strong>Debit card</strong><small>Demo card payment</small></span>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="paymentMethod" value="cash">
+              <span class="payment-option-icon">$</span>
+              <span><strong>Cash on collection</strong><small>Pay at the stall when you collect your order</small></span>
+            </label>
+          </fieldset>
+
+          <p id="payment-message" class="payment-message" role="status" aria-live="polite"></p>
+          <button id="pay-button" class="pay-button" type="submit">Place order</button>
+        </form>
+      </section>
+
+      <aside class="order-card" aria-labelledby="order-summary-title">
+        <h2 id="order-summary-title">Order summary</h2>
+        <ul id="payment-items" class="payment-items"></ul>
+        <dl class="payment-totals">
+          <div><dt>Subtotal</dt><dd id="payment-subtotal">$0.00</dd></div>
+          <div><dt>Packaging fee</dt><dd id="payment-packaging">$0.00</dd></div>
+          <div><dt>Delivery fee</dt><dd id="payment-delivery">$0.00</dd></div>
+          <div><dt>GST (9%)</dt><dd id="payment-gst">$0.00</dd></div>
+          <div class="payment-grand-total"><dt>Total</dt><dd id="payment-total">$0.00</dd></div>
+        </dl>
+      </aside>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/payment.js"></script>
+</body>
+</html>

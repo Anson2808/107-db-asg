@@ -29,6 +29,7 @@ const {
   updateStallSchema,
   createMenuItemSchema,
   updateMenuItemSchema,
+  createOrderSchema,
   addToCartSchema,
   updateCartQuantitySchema,
 } = require("./middlewares/validateMiddleware");
@@ -67,6 +68,7 @@ app.post("/api/inspections", verifyJWT, requireRole("stallOwner"), inspectionCon
 // Order routes (any logged-in user)
 const orderController = require("./controllers/orderController");
 app.get("/api/orders/history", verifyJWT, orderController.getMyOrderHistory);
+app.post("/api/orders", verifyJWT, validate(createOrderSchema), orderController.placeOrder);
 
 // Cart routes (any logged-in user)
 const cartController = require("./controllers/cartController");

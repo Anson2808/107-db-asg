@@ -177,11 +177,11 @@ CREATE TABLE dbo.Inspections (
 
 -- Users (all seeded accounts log in with the password: password)
 INSERT INTO dbo.Users (Username, PasswordHash, Email, FullName, Role) VALUES
-('ahmad88',   '$2b$10$KX7HzGg4HnPN09EJy/t.WO3zQqFqkV3iBzrkFnJBbzmSqe9SUJMdG', 'ahmad@cowork.com',   'Ahmad bin Ismail', 'stallOwner'),
-('meiling',   '$2b$10$KX7HzGg4HnPN09EJy/t.WO3zQqFqkV3iBzrkFnJBbzmSqe9SUJMdG', 'meiling@cowork.com',  'Tan Mei Ling',     'stallOwner'),
-('kumar_s',   '$2b$10$KX7HzGg4HnPN09EJy/t.WO3zQqFqkV3iBzrkFnJBbzmSqe9SUJMdG', 'kumar@cowork.com',    'Siva Kumar',       'stallOwner'),
-('jane_doe',  '$2b$10$KX7HzGg4HnPN09EJy/t.WO3zQqFqkV3iBzrkFnJBbzmSqe9SUJMdG', 'jane@example.com',    'Jane Doe',         'customer'),
-('bob_tan',   '$2b$10$KX7HzGg4HnPN09EJy/t.WO3zQqFqkV3iBzrkFnJBbzmSqe9SUJMdG', 'bob@example.com',     'Bob Tan',          'customer');
+('ahmad88',   '$2b$10$CDfd8zlL0WtDEFiALZ6XMO74b0YjSUs85ZC8HeeK3ojfGyH5ghTPW', 'ahmad@cowork.com',   'Ahmad bin Ismail', 'stallOwner'),
+('meiling',   '$2b$10$CDfd8zlL0WtDEFiALZ6XMO74b0YjSUs85ZC8HeeK3ojfGyH5ghTPW', 'meiling@cowork.com',  'Tan Mei Ling',     'stallOwner'),
+('kumar_s',   '$2b$10$CDfd8zlL0WtDEFiALZ6XMO74b0YjSUs85ZC8HeeK3ojfGyH5ghTPW', 'kumar@cowork.com',    'Siva Kumar',       'stallOwner'),
+('jane_doe',  '$2b$10$CDfd8zlL0WtDEFiALZ6XMO74b0YjSUs85ZC8HeeK3ojfGyH5ghTPW', 'jane@example.com',    'Jane Doe',         'customer'),
+('bob_tan',   '$2b$10$CDfd8zlL0WtDEFiALZ6XMO74b0YjSUs85ZC8HeeK3ojfGyH5ghTPW', 'bob@example.com',     'Bob Tan',          'customer');
 
 -- Stalls
 INSERT INTO dbo.Stalls (OwnerId, StallName, Description, CuisineType, Status) VALUES

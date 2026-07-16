@@ -62,6 +62,22 @@ const updateMenuItemSchema = Joi.object({
   isAvailable: Joi.boolean().optional(),
 }).min(1);
 
+// Create order schema
+const createOrderSchema = Joi.object({
+  items: Joi.array()
+    .items(
+      Joi.object({
+        menuItemId: Joi.number().integer().required(),
+        quantity: Joi.number().integer().min(1).required(),
+      })
+    )
+    .min(1)
+    .required(),
+  paymentMethod: Joi.string()
+    .valid("credit_card", "debit_card", "paynow", "cash", "gift_card")
+    .required(),
+});
+
 // Add to cart schema
 const addToCartSchema = Joi.object({
   menuItemId: Joi.number().integer().required(),
@@ -80,6 +96,7 @@ module.exports = {
   updateStallSchema,
   createMenuItemSchema,
   updateMenuItemSchema,
+  createOrderSchema,
   addToCartSchema,
   updateCartQuantitySchema,
 };

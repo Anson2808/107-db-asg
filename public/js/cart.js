@@ -124,22 +124,16 @@ async function saveCartToAPI(userId, items) {
 }
 
 /**
- * Mock POST /api/orders
- * Simulates inserting into Orders, then OrderItems (name/price
- * snapshot), matching the FK relationships in the schema.
- * TODO: Replace with a real fetch('/api/orders', { method: 'POST', ... })
- *       call once the Express route + SQL Server transaction exist.
+ * POST /api/orders — real endpoint.
+ * Sends { items, paymentMethod } — the server looks up live
+ * prices itself and recalculates every total; nothing priced
+ * here is trusted from the client.
  */
 async function createOrder(orderPayload) {
-  await mockDelay(200);
-  // TODO: implement real POST request to Express API
-  // TODO: Express route should, inside a transaction:
-  //   1. INSERT INTO Orders (UserId, Subtotal, PackagingFee, DeliveryFee, Total, Status)
-  //   2. INSERT INTO OrderItems (OrderId, MenuItemId, StallId, ItemName, UnitPrice, Quantity)
-  //      for each cart line, snapshotting name/price at order time
-  //   3. INSERT INTO Payments (OrderId, Amount, Method, Status)
-  console.warn('createOrder() is a placeholder — no backend connected yet.', orderPayload);
-  return { success: true, orderId: null };
+  return api("/orders", {
+    method: "POST",
+    body: JSON.stringify(orderPayload),
+  });
 }
 
 /**
@@ -356,6 +350,32 @@ function validateCheckout() {
   });
 }
 
+/**
+ * placeOrder(paymentMethod)
+ * Builds the { items, paymentMethod } payload the real API
+ * expects, calls createOrder(), and on success clears the cart
+ * and redirects to the order history page.
+ */
+async function placeOrder(paymentMethod) {
+  if (!validateCheckout()) {
+    return { success: false, message: 'Your cart is empty or contains an unavailable item.' };
+  }
+
+  const items = cartItems.map((cartItem) => ({
+    menuItemId: cartItem.menuItemId,
+    quantity: cartItem.quantity
+  }));
+
+  try {
+    const { order } = await createOrder({ items, paymentMethod });
+    clearCart(); // empties localStorage cart now that the order is placed
+    return { success: true, order };
+  } catch (error) {
+    console.error('placeOrder failed.', error);
+    return { success: false, message: error.message || 'Failed to place order.' };
+  }
+}
+
 /* ============================================================
    TEMPORARY ORDER SUMMARY (for handoff to createOrder later)
 ============================================================ */
@@ -547,26 +567,46 @@ function formatCurrency(amount) {
 function attachCartEventListeners() {
   const cartListElement = document.querySelector('.cart-item-list');
 
-  if (!cartListElement) {
-    return;
+  if (cartListElement) {
+    cartListElement.addEventListener('click', (event) => {
+      const target = event.target;
+      const menuItemId = Number(target.dataset.itemId);
+
+      if (!menuItemId) {
+        return;
+      }
+
+      if (target.classList.contains('qty-increase')) {
+        updateQuantity(menuItemId, 1);
+      } else if (target.classList.contains('qty-decrease')) {
+        updateQuantity(menuItemId, -1);
+      } else if (target.classList.contains('remove-item-btn')) {
+        removeFromCart(menuItemId);
+      }
+    });
   }
 
-  cartListElement.addEventListener('click', (event) => {
-    const target = event.target;
-    const menuItemId = Number(target.dataset.itemId);
+  const placeOrderButton = document.querySelector('.place-order-btn');
+  const messageElement = document.querySelector('.place-order-message');
 
-    if (!menuItemId) {
-      return;
-    }
+  if (placeOrderButton) {
+    placeOrderButton.addEventListener('click', () => {
+      if (validateCheckout()) {
+        window.location.href = '/payment.html';
+      }
+    });
+  }
 
-    if (target.classList.contains('qty-increase')) {
-      updateQuantity(menuItemId, 1);
-    } else if (target.classList.contains('qty-decrease')) {
-      updateQuantity(menuItemId, -1);
-    } else if (target.classList.contains('remove-item-btn')) {
-      removeFromCart(menuItemId);
-    }
-  });
+  const cancelOrderButton = document.querySelector('.cancel-order-btn');
+
+  if (cancelOrderButton) {
+    cancelOrderButton.addEventListener('click', () => {
+      clearCart();
+      if (messageElement) {
+        messageElement.textContent = '';
+      }
+    });
+  }
 }
 
 /* ============================================================
