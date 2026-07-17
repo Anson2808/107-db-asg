@@ -3,7 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
-const { connectDB, sql } = require("./database/dbConfig");
+const { connectDB } = require("./database/dbConfig");
 
 const app = express();
 
@@ -41,6 +41,7 @@ const {
   updateCartQuantitySchema,
   feedbackSchema,
   complaintSchema,
+  updateProfileSchema,
 } = require("./middlewares/validateMiddleware");
 const { verifyJWT, requireRole } = require("./middlewares/authMiddleware");
 
@@ -95,6 +96,11 @@ app.post("/api/cart", verifyJWT, validate(addToCartSchema), cartController.addTo
 app.get("/api/cart", verifyJWT, cartController.getCart);
 app.put("/api/cart/:cartItemId", verifyJWT, validate(updateCartQuantitySchema), cartController.updateCartItem);
 app.delete("/api/cart/:cartItemId", verifyJWT, cartController.removeFromCart);
+
+// User profile routes (any logged-in user)
+const userController = require("./controllers/userController");
+app.get("/api/users/me", verifyJWT, userController.getMyProfile);
+app.put("/api/users/me", verifyJWT, validate(updateProfileSchema), userController.updateMyProfile);
 
 // ==========================================
 // ERROR HANDLING (Must be last)

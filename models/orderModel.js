@@ -26,12 +26,17 @@ async function createOrder(userId, items, paymentMethod) {
   try {
     await transaction.begin();
 
-    // Look up live price/availability/stall for every item in one go
-    const menuItemIds = items.map((item) => item.menuItemId);
-    const menuItemsResult = await new sql.Request(transaction).query(`
+    // Look up live price/availability/stall for every item in one go.
+    // Each id is bound as a typed parameter — never concatenated into SQL.
+    const lookupRequest = new sql.Request(transaction);
+    const idParams = items.map((item, i) => {
+      lookupRequest.input(`id${i}`, sql.Int, item.menuItemId);
+      return `@id${i}`;
+    });
+    const menuItemsResult = await lookupRequest.query(`
       SELECT MenuItemId, StallId, Name, Price, IsAvailable
       FROM MenuItems
-      WHERE MenuItemId IN (${menuItemIds.join(",")})
+      WHERE MenuItemId IN (${idParams.join(",")})
     `);
 
     const menuItemsById = new Map(

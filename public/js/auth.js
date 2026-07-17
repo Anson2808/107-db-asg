@@ -43,6 +43,7 @@ function tr(key) {
     myStall: "My Stall",
     analytics: "Analytics",
     language: "Language",
+    profile: "Profile",
   };
 
   return fallback[key] || key;
@@ -79,6 +80,7 @@ function renderNavbar() {
       leftLinks += `<a href="/feedback.html">${tr("feedbackComplaint")}</a>`;
     }
     leftLinks += `<a href="/order-history.html">${tr("orderHistory")}</a>`;
+    leftLinks += `<a href="/profile.html">${tr("profile")}</a>`;
     rightLinks = `
       <a href="/cart.html">${tr("cart")} <span id="cart-badge" class="badge cart-badge-nav" style="display:none">0</span></a>
       <span class="navbar-user">${escapeHtml(user.username)}</span>
@@ -117,7 +119,7 @@ function renderNavbar() {
 
 function escapeHtml(str) {
   const div = document.createElement("div");
-  div.textContent = str;
+  div.textContent = str || "";
   return div.innerHTML;
 }
 

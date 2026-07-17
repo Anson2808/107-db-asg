@@ -1,17 +1,9 @@
 /**
- * index.js — Home page: menu browsing, cuisine filter, add-to-cart
- *
- * Reads /api/menu, renders items grouped by stall, and writes to
- * localStorage key "freshbite_cart" in the exact shape that cart.js
- * expects: [{ menuItemId, quantity, specialInstructions }].
+ * index.js — Home page: menu browsing, cuisine filter, likes,
+ * per-stall reviews, and add-to-cart (POST /api/cart).
  */
 
 'use strict';
-
-/* ============================================================
-   CART HELPERS — Direct Backend Database Integration
-============================================================ */
-// Local storage cart functions removed; database API used instead.
 
 /* ============================================================
    STATE

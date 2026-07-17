@@ -333,11 +333,7 @@ function statusBadge(status) {
   return `<span class="badge ${cls}">${label}</span>`;
 }
 
-function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str || "";
-  return div.innerHTML;
-}
+// escapeHtml comes from auth.js (loaded before this file on every page).
 
 function escapeAttr(str) {
   return (str || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

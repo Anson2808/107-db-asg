@@ -1,12 +1,12 @@
 'use strict';
 
-const PAYMENT_CONFIG = Object.freeze({ storageKey: 'freshbite_cart', gstRate: 0.09, packagingFee: 0.60, deliveryFee: 2.50 });
+// Display preview constants — must mirror models/orderModel.js,
+// which recalculates all totals server-side at order time.
+const PAYMENT_CONFIG = Object.freeze({ gstRate: 0.09, packagingFee: 0.60, deliveryFee: 2.50 });
 let paymentCart = [];
 let menuById = new Map();
 
 function currency(value) { return `$${Number(value).toFixed(2)}`; }
-
-// readCart() helper removed; database API used instead.
 
 async function loadMenu() {
   const data = await api('/menu');

@@ -105,6 +105,16 @@ const complaintSchema = Joi.object({
   description: Joi.string().trim().min(1).max(1000).required(),
 });
 
+// Update profile schema
+const updateProfileSchema = Joi.object({
+  email: Joi.string().email().optional(),
+  fullName: Joi.string().optional(),
+  currentPassword: Joi.string().optional(),
+  newPassword: Joi.string().min(8).optional(),
+})
+  .min(1)
+  .and("currentPassword", "newPassword");
+
 module.exports = {
   validate,
   registerSchema,
@@ -117,4 +127,5 @@ module.exports = {
   updateCartQuantitySchema,
   feedbackSchema,
   complaintSchema,
+  updateProfileSchema,
 };

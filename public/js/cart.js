@@ -1,44 +1,28 @@
 /* ============================================================
-   FRESHBITE / COWORK — SHOPPING CART LOGIC (FRONTEND ONLY)
+   cart.js — Checkout review page (cart.html)
    ------------------------------------------------------------
-   Maps directly to the SQL Server schema provided:
-     - dbo.CartItems  (CartItemId, UserId, MenuItemId, Quantity)
-     - dbo.MenuItems  (MenuItemId, StallId, Name, Description,
-                       Price, IsAvailable, LikeCount)
-     - dbo.Stalls     (StallId, StallName, ...)
-     - dbo.Orders     (Subtotal, PackagingFee, DeliveryFee, Total)
-     - dbo.OrderItems (OrderId, MenuItemId, StallId, ItemName,
-                       UnitPrice, Quantity)
-     - dbo.Payments   (OrderId, Amount, Method, Status)
+   The cart lives in the DATABASE (CartItems table) and is read
+   and mutated through the REST API (/api/cart). This page shows
+   the logged-in user's cart, lets them adjust quantities or
+   remove lines, previews the order totals, and hands off to
+   payment.html to actually place the order.
 
-   IMPORTANT SCHEMA NOTES (flagged, not invented):
-     1. CartItems has NO price column — price is always looked
-        up live from MenuItems.Price. Never cache price on the
-        cart item itself.
-     2. Orders has NO GST or Discount column. Per instructions,
-        GST is calculated here in the frontend only (9%, not
-        persisted). Discount logic is intentionally skipped —
-        no PromoCodes table exists in the schema.
-     3. PackagingFee / DeliveryFee ARE persisted columns on
-        Orders, but there is no config table for their values.
-        Per instructions, fixed flat constants are used for now.
-     4. "Special instructions" per cart item has no backing
-        column in CartItems. It is kept as a local, UI-only
-        field (not sent to saveCartToAPI) until the schema is
-        extended to support it — flagged with TODO below.
+   Prices are never stored on cart lines — they are always looked
+   up live from /api/menu. The totals below are a DISPLAY preview
+   only; the backend recalculates everything from live prices at
+   order time (models/orderModel.js) and trusts nothing from here.
    ============================================================ */
 
 'use strict';
 
 /* ============================================================
-   CONFIG — business constants (frontend-only, per instructions)
+   CONFIG — display constants (must mirror models/orderModel.js)
 ============================================================ */
 const CART_CONFIG = Object.freeze({
-  STORAGE_KEY: 'freshbite_cart',       // localStorage key for CartItems mirror
-  GST_RATE: 0.09,                      // 9% GST, calculated client-side only
+  GST_RATE: 0.09,                      // 9% GST, display preview only
   PACKAGING_FEE: 0.60,                 // flat fee, mirrors Orders.PackagingFee
   DELIVERY_FEE: 2.50,                  // flat fee, mirrors Orders.DeliveryFee
-  MIN_QUANTITY: 1                      // quantity can never drop below this
+  MIN_QUANTITY: 1                      // below this, the line is removed instead
 });
 
 // Images are intentionally used only in the cart. Keys match MenuItemId values
@@ -69,38 +53,24 @@ const MENU_IMAGE_PATHS = Object.freeze({
 ============================================================ */
 
 /**
- * cartItems mirrors dbo.CartItems rows for the current user.
- * Each entry: { menuItemId, quantity, specialInstructions }
- * NOTE: UserId is intentionally omitted here — it will be
- * attached server-side from the authenticated session once
- * saveCartToAPI() is implemented.
- * NOTE: specialInstructions is UI-only (see schema note #4).
+ * cartItems — the user's cart rows as returned by GET /api/cart:
+ * [{ cartItemId, menuItemId, name, stallName, unitPrice, quantity, lineTotal }]
  */
 let cartItems = [];
 
 /**
- * menuItemsCache mirrors a MenuItems + Stalls join.
- * Populated by fetchMenuItems() (mock for now).
- * Each entry: { menuItemId, stallId, stallName, name,
- *               description, price, isAvailable }
+ * menuItemsCache — /api/menu items mapped to camelCase:
+ * [{ menuItemId, stallId, stallName, name, description, price, isAvailable }]
  */
 let menuItemsCache = [];
 
 /* ============================================================
-   MOCK API LAYER
-   ------------------------------------------------------------
-   These functions simulate the future Express + SQL Server
-   REST endpoints. They return Promises so the calling code
-   already behaves exactly as it will once real fetch() calls
-   replace the mock data below.
+   API LAYER
 ============================================================ */
 
 /**
- * GET /api/menu — real endpoint.
- * Runs: SELECT MenuItems.*, Stalls.StallName, Stalls.CuisineType
- *       FROM MenuItems JOIN Stalls ON MenuItems.StallId = Stalls.StallId
- * Maps DB column casing (MenuItemId, Name, ...) to the camelCase
- * shape the rest of this file expects.
+ * GET /api/menu — maps DB column casing (MenuItemId, Name, ...)
+ * to the camelCase shape the rest of this file expects.
  */
 async function fetchMenuItems() {
   const data = await api('/menu');
@@ -129,41 +99,9 @@ async function fetchCart() {
   }
 }
 
-/**
- * POST /api/orders — real endpoint.
- * Sends { items, paymentMethod } — the server looks up live
- * prices itself and recalculates every total; nothing priced
- * here is trusted from the client.
- */
-async function createOrder(orderPayload) {
-  return api("/orders", {
-    method: "POST",
-    body: JSON.stringify(orderPayload),
-  });
-}
-
 /* ============================================================
    CART MUTATION FUNCTIONS
 ============================================================ */
-
-/**
- * addToCart(menuItemId, quantity, specialInstructions)
- * Adds a menu item to the cart in the database.
- */
-async function addToCart(menuItemId, quantity = 1, specialInstructions = '') {
-  try {
-    await api('/cart', {
-      method: 'POST',
-      body: JSON.stringify({ menuItemId, quantity })
-    });
-    await fetchCart();
-    renderCart();
-    await updateCartBadge();
-  } catch (error) {
-    console.error('addToCart failed:', error);
-    alert(error.message || 'Failed to add item to cart');
-  }
-}
 
 /**
  * removeFromCart(menuItemId)
@@ -217,22 +155,6 @@ async function updateQuantity(menuItemId, delta) {
   }
 }
 
-/**
- * clearCart()
- * Empties the cart by deleting each item sequentially.
- */
-async function clearCart() {
-  try {
-    for (const item of cartItems) {
-      await api(`/cart/${item.cartItemId}`, { method: 'DELETE' });
-    }
-  } catch (err) {
-    console.error('Failed to clear cart:', err);
-  }
-  await fetchCart();
-  renderCart();
-}
-
 /* ============================================================
    MENU ITEM LOOKUP HELPERS
 ============================================================ */
@@ -257,14 +179,9 @@ function getMenuItemImage(menuItemId) {
 
 /**
  * calculateTotals()
- * Computes Subtotal, PackagingFee, DeliveryFee, GST, Discount,
- * and Grand Total for the current cart.
- *
- * Field names in the returned object intentionally match the
- * Orders table columns (Subtotal, PackagingFee, DeliveryFee,
- * Total) so the object can later be sent almost as-is to
- * createOrder(). GST and Discount are NOT Orders columns —
- * they exist here only as frontend display values.
+ * Computes the display preview of Subtotal, PackagingFee,
+ * DeliveryFee, GST and Grand Total for the current cart.
+ * The backend recomputes all of these at order time.
  */
 function calculateTotals() {
   const isCartEmpty = cartItems.length === 0;
@@ -279,20 +196,14 @@ function calculateTotals() {
   const packagingFee = isCartEmpty ? 0 : CART_CONFIG.PACKAGING_FEE;
   const deliveryFee = isCartEmpty ? 0 : CART_CONFIG.DELIVERY_FEE;
 
-  // GST calculated client-side only — no Orders column exists for it
   const gst = subtotal * CART_CONFIG.GST_RATE;
-
-  // Discount intentionally skipped — no PromoCodes table exists yet
-  const discount = 0;
-
-  const grandTotal = subtotal + packagingFee + deliveryFee + gst - discount;
+  const grandTotal = subtotal + packagingFee + deliveryFee + gst;
 
   return {
     subtotal: roundToCents(subtotal),
     packagingFee: roundToCents(packagingFee),
     deliveryFee: roundToCents(deliveryFee),
     gst: roundToCents(gst),
-    discount: roundToCents(discount),
     grandTotal: roundToCents(grandTotal)
   };
 }
@@ -327,80 +238,17 @@ function validateCheckout() {
   });
 }
 
-/**
- * placeOrder(paymentMethod)
- * Builds the { items, paymentMethod } payload the real API
- * expects, calls createOrder(), and on success clears the cart
- * and redirects to the order history page.
- */
-async function placeOrder(paymentMethod) {
-  if (!validateCheckout()) {
-    return { success: false, message: 'Your cart is empty or contains an unavailable item.' };
-  }
-
-  const items = cartItems.map((cartItem) => ({
-    menuItemId: cartItem.menuItemId,
-    quantity: cartItem.quantity
-  }));
-
-  try {
-    const { order } = await createOrder({ items, paymentMethod });
-    clearCart(); // empties localStorage cart now that the order is placed
-    return { success: true, order };
-  } catch (error) {
-    console.error('placeOrder failed.', error);
-    return { success: false, message: error.message || 'Failed to place order.' };
-  }
-}
-
-/* ============================================================
-   TEMPORARY ORDER SUMMARY (for handoff to createOrder later)
-============================================================ */
-
-/**
- * generateOrderSummary()
- * Builds a temporary summary object shaped to match Orders +
- * OrderItems columns, ready to be passed into createOrder()
- * once the real Express endpoint exists. This does NOT persist
- * anything yet — it is purely a client-side preview/payload.
- */
-function generateOrderSummary() {
-  const totals = calculateTotals();
-
-  const orderItems = cartItems.map((cartItem) => {
-    const menuItem = getMenuItemById(cartItem.menuItemId);
-    return {
-      menuItemId: cartItem.menuItemId,
-      stallId: menuItem ? menuItem.stallId : null,
-      itemName: menuItem ? menuItem.name : 'Unknown Item',
-      unitPrice: menuItem ? menuItem.price : 0,
-      quantity: cartItem.quantity,
-      specialInstructions: cartItem.specialInstructions || '' // UI-only, not in OrderItems schema
-    };
-  });
-
-  return {
-    subtotal: totals.subtotal,
-    packagingFee: totals.packagingFee,
-    deliveryFee: totals.deliveryFee,
-    total: totals.grandTotal, // maps to Orders.Total
-    status: 'Pending',        // matches Orders.Status default
-    items: orderItems
-  };
-}
-
 /* ============================================================
    RENDERING
    ------------------------------------------------------------
-   Assumes the following elements exist in the HTML:
-     <ul class="cart-item-list">                — cart container
-     <p id="summarySubtotal">                    — order summary
-     <p id="summaryPackagingFee">
-     <p id="summaryDeliveryFee">
-     <p id="summaryGST">
-     <p id="summaryDiscount">
-     <p id="summaryGrandTotal">
-     <button class="place-order-btn">            — checkout button
+   Assumes the following elements exist in cart.html:
+     <ul class="cart-item-list">                 — cart container
+     <dd id="summarySubtotal">                   — order summary
+     <dd id="summaryPackagingFee">
+     <dd id="summaryDeliveryFee">
+     <dd id="summaryGST">
+     <dd id="summaryGrandTotal">
+     <button class="place-order-btn">            — payment handoff
 ============================================================ */
 
 /**
@@ -495,7 +343,6 @@ function renderOrderSummary() {
   setTextIfExists('summaryPackagingFee', formatCurrency(totals.packagingFee));
   setTextIfExists('summaryDeliveryFee', formatCurrency(totals.deliveryFee));
   setTextIfExists('summaryGST', formatCurrency(totals.gst));
-  setTextIfExists('summaryDiscount', totals.discount > 0 ? `−${formatCurrency(totals.discount)}` : formatCurrency(0));
   setTextIfExists('summaryGrandTotal', formatCurrency(totals.grandTotal));
 }
 
@@ -565,23 +412,11 @@ function attachCartEventListeners() {
   }
 
   const placeOrderButton = document.querySelector('.place-order-btn');
-  const messageElement = document.querySelector('.place-order-message');
 
   if (placeOrderButton) {
     placeOrderButton.addEventListener('click', () => {
       if (validateCheckout()) {
         window.location.href = '/payment.html';
-      }
-    });
-  }
-
-  const cancelOrderButton = document.querySelector('.cancel-order-btn');
-
-  if (cancelOrderButton) {
-    cancelOrderButton.addEventListener('click', () => {
-      clearCart();
-      if (messageElement) {
-        messageElement.textContent = '';
       }
     });
   }
@@ -593,9 +428,8 @@ function attachCartEventListeners() {
 
 /**
  * initCart()
- * Entry point — loads the cart from localStorage, fetches menu
- * item details (mock for now), then renders the cart and wires
- * up event listeners.
+ * Entry point — requires login, loads the menu cache and the
+ * user's cart from the API, then renders and wires up events.
  */
 async function initCart() {
   if (!isLoggedIn()) {
@@ -612,7 +446,6 @@ async function initCart() {
     cartItems = [];
   }
 
-  console.log("initCart: menuItemsCache =", menuItemsCache, "cartItems =", cartItems);
   renderCart();
   attachCartEventListeners();
 }
