@@ -15,13 +15,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   loadAnalytics();
+
+  // Ensure the dropdown triggers a reload
+  const filterDropdown = document.getElementById("dateRangeFilter");
+  if (filterDropdown) {
+    filterDropdown.addEventListener("change", loadAnalytics);
+  }
 });
 
 async function loadAnalytics() {
   try {
+    // Grab the current filter value
+    const range = document.getElementById("dateRangeFilter")?.value || 'monthly';
+    
     // Fetch both endpoints at the same time for speed
     const [perfData, hygieneData] = await Promise.all([
-      api("/analytics/performance"),
+      api(`/analytics/performance?range=${range}`),
       api("/inspections/history").catch(() => ({ history: [] })) // Graceful fallback if no hygiene data exists yet
     ]);
     
@@ -57,7 +66,12 @@ function renderDashboard(data) {
   // Chart 2: Popular Items
   renderPopularItemsChart(data.popularItems || []);
 
-  // Chart 3: Rating Trend
+  // Chart 3: Peak Hours
+  if (data.peakHours) {
+    renderPeakHoursChart(data.peakHours);
+  }
+
+  // Chart 4: Rating Trend
   renderRatingTrendChart(data.ratingTrend || []);
 }
 
@@ -156,7 +170,54 @@ function renderPopularItemsChart(rows) {
 }
 
 // ============================================================
-//   CHART 3 — Rating Trend (line chart)
+//   CHART 3 — Peak Hours (bar)
+// ============================================================
+let peakHoursChartInstance = null;
+
+function renderPeakHoursChart(rows) {
+  const canvas = document.getElementById("peakHoursChart");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  if (peakHoursChartInstance) peakHoursChartInstance.destroy();
+
+  // Format hours from 0-23 to 12AM-11PM
+  const formatHour = (h) => h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h - 12} PM`;
+  
+  const labels = rows.map((r) => formatHour(r.hour));
+  const values = rows.map((r) => Number(r.volume));
+
+  peakHoursChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Order Volume",
+          data: values,
+          backgroundColor: "#10B981", // Success Green
+          borderRadius: 6,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { stepSize: 1 },
+        },
+      },
+    },
+  });
+}
+
+// ============================================================
+//   CHART 4 — Rating Trend (line chart)
 // ============================================================
 let ratingTrendChartInstance = null;
 
@@ -208,6 +269,7 @@ function renderRatingTrendChart(rows) {
     },
   });
 }
+
 // ============================================================
 //   HYGIENE SECTION (Chart & Table)
 // ============================================================
@@ -292,72 +354,3 @@ function renderHygieneChart(history) {
     },
   });
 }
-// ============================================================
-//   ADD HYGIENE RECORD LOGIC
-// ============================================================
-
-document.addEventListener("DOMContentLoaded", () => {
-  // Wire up the toggle buttons
-  const showBtn = document.getElementById("showAddHygieneBtn");
-  const cancelBtn = document.getElementById("cancelAddHygieneBtn");
-  const formContainer = document.getElementById("addHygieneFormContainer");
-  const form = document.getElementById("createHygieneForm");
-
-  if (showBtn) {
-    showBtn.addEventListener("click", () => {
-      formContainer.style.display = "block";
-      showBtn.style.display = "none";
-    });
-  }
-
-  if (cancelBtn) {
-    cancelBtn.addEventListener("click", () => {
-      formContainer.style.display = "none";
-      showBtn.style.display = "block";
-      form.reset();
-      document.getElementById("addHygieneError").style.display = "none";
-    });
-  }
-
-  // Handle form submission
-  if (form) {
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      
-      const errorEl = document.getElementById("addHygieneError");
-      const submitBtn = form.querySelector("button[type='submit']");
-      
-      errorEl.style.display = "none";
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Saving...";
-
-      const payload = {
-        date: document.getElementById("addHygieneDate").value,
-        grade: document.getElementById("addHygieneGrade").value,
-        score: parseInt(document.getElementById("addHygieneScore").value),
-        violations: document.getElementById("addHygieneViolations").value.trim()
-      };
-
-      try {
-        await api("/inspections", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
-        
-        // Reset and hide form
-        formContainer.style.display = "none";
-        showBtn.style.display = "block";
-        form.reset();
-        
-        // Reload the analytics page to fetch and chart the new data
-        await loadAnalytics(); 
-      } catch (err) {
-        errorEl.textContent = err.message;
-        errorEl.style.display = "block";
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Save Record";
-      }
-    });
-  }
-});

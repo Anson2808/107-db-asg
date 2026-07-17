@@ -75,7 +75,6 @@ app.get("/api/analytics/performance", verifyJWT, requireRole("stallOwner"), anal
 // Inspections & Hygiene routes (owner only)
 const inspectionController = require("./controllers/inspectionController");
 app.get("/api/inspections/history", verifyJWT, requireRole("stallOwner"), inspectionController.getMyHygieneHistory);
-app.post("/api/inspections", verifyJWT, requireRole("stallOwner"), inspectionController.addMyHygieneRecord);
 
 // Feedback routes (customer only)
 const feedbackController = require("./controllers/feedbackController");

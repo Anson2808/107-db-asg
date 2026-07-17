@@ -79,11 +79,11 @@ async function createOrder(userId, items, paymentMethod) {
       .query(`
         INSERT INTO Orders (UserId, Subtotal, PackagingFee, DeliveryFee, Total, Status)
         OUTPUT INSERTED.OrderId
-        VALUES (@UserId, @Subtotal, @PackagingFee, @DeliveryFee, @Total, 'Pending')
+        VALUES (@UserId, @Subtotal, @PackagingFee, @DeliveryFee, @Total, 'Paid')
       `);
 
     const orderId = orderResult.recordset[0].OrderId;
-
+    
     // Insert one OrderItems row per line, snapshotting name/price
     for (const line of orderLines) {
       await new sql.Request(transaction)
@@ -116,7 +116,7 @@ async function createOrder(userId, items, paymentMethod) {
 
     await transaction.commit();
 
-    return { orderId, subtotal: roundToCents(subtotal), packagingFee: PACKAGING_FEE, deliveryFee: DELIVERY_FEE, gst, total, status: "Pending" };
+    return { orderId, subtotal: roundToCents(subtotal), packagingFee: PACKAGING_FEE, deliveryFee: DELIVERY_FEE, gst, total, status: "Paid" };
   } catch (err) {
     await transaction.rollback();
     throw err;

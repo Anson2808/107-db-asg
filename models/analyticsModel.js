@@ -1,6 +1,6 @@
 const { sql } = require("../database/dbConfig");
 
-async function getOrderStats(stallId) {
+async function getOrderStats(stallId, days) {
   const result = await sql.query`
     SELECT
       COUNT(DISTINCT o.OrderId) AS totalOrders,
@@ -9,11 +9,12 @@ async function getOrderStats(stallId) {
     JOIN OrderItems oi ON o.OrderId = oi.OrderId
     WHERE oi.StallId = ${stallId}
       AND o.Status IN ('Paid', 'Completed')
+      AND o.CreatedAt >= DATEADD(DAY, -${days}, GETDATE())
   `;
   return result.recordset[0];
 }
 
-async function getRevenueByDay(stallId) {
+async function getRevenueByDay(stallId, days) {
   const result = await sql.query`
     SELECT
       CAST(o.CreatedAt AS DATE) AS date,
@@ -22,14 +23,14 @@ async function getRevenueByDay(stallId) {
     JOIN OrderItems oi ON o.OrderId = oi.OrderId
     WHERE oi.StallId = ${stallId}
       AND o.Status IN ('Paid', 'Completed')
-      AND o.CreatedAt >= DATEADD(DAY, -30, GETDATE())
+      AND o.CreatedAt >= DATEADD(DAY, -${days}, GETDATE())
     GROUP BY CAST(o.CreatedAt AS DATE)
     ORDER BY date
   `;
   return result.recordset;
 }
 
-async function getPopularItems(stallId) {
+async function getPopularItems(stallId, days) {
   const result = await sql.query`
     SELECT TOP 5
       oi.ItemName AS name,
@@ -38,8 +39,26 @@ async function getPopularItems(stallId) {
     JOIN Orders o ON o.OrderId = oi.OrderId
     WHERE oi.StallId = ${stallId}
       AND o.Status IN ('Paid', 'Completed')
+      AND o.CreatedAt >= DATEADD(DAY, -${days}, GETDATE())
     GROUP BY oi.ItemName
     ORDER BY totalQty DESC
+  `;
+  return result.recordset;
+}
+
+async function getPeakHours(stallId, days) {
+  const result = await sql.query`
+    SELECT
+      DATEPART(HOUR, o.CreatedAt) AS hour,
+      COUNT(DISTINCT o.OrderId) AS volume,
+      SUM(oi.UnitPrice * oi.Quantity) AS revenue
+    FROM Orders o
+    JOIN OrderItems oi ON o.OrderId = oi.OrderId
+    WHERE oi.StallId = ${stallId}
+      AND o.Status IN ('Paid', 'Completed')
+      AND o.CreatedAt >= DATEADD(DAY, -${days}, GETDATE())
+    GROUP BY DATEPART(HOUR, o.CreatedAt)
+    ORDER BY hour ASC
   `;
   return result.recordset;
 }
@@ -62,5 +81,6 @@ module.exports = {
   getOrderStats,
   getRevenueByDay,
   getPopularItems,
+  getPeakHours,
   getAverageRatingTrend,
 };
