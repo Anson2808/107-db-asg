@@ -150,29 +150,29 @@ async function handleMenuAction(e) {
   const target = e.target;
   const id = Number(target.dataset.id);
 
-  // Edit button clicked
+  // 1. Edit button clicked
   if (target.classList.contains("edit-item-btn")) {
     const editRow = document.getElementById(`menuEdit-${id}`);
     const viewRow = document.getElementById(`menuRow-${id}`);
     if (editRow) {
-      editRow.style.display = "";
+      editRow.style.display = "table-row";
       viewRow.style.display = "none";
     }
     return;
   }
 
-  // Cancel edit
+  // 2. Cancel edit
   if (target.classList.contains("cancel-edit-btn")) {
     const editRow = document.getElementById(`menuEdit-${id}`);
     const viewRow = document.getElementById(`menuRow-${id}`);
     if (editRow) {
       editRow.style.display = "none";
-      viewRow.style.display = "";
+      viewRow.style.display = "table-row";
     }
     return;
   }
 
-  // Delete button
+  // 3. Delete button
   if (target.classList.contains("delete-item-btn")) {
     if (!confirm("Delete this menu item? This cannot be undone.")) return;
     target.disabled = true;
@@ -190,10 +190,12 @@ async function handleMenuAction(e) {
     return;
   }
 
-  // Edit form submit
-  if (target.closest(".edit-item-form")) {
+  // 4. Edit form submit (The Save Button)
+  const saveBtn = target.closest("button[type='submit']");
+  const form = target.closest(".edit-item-form");
+
+  if (saveBtn && form) {
     e.preventDefault();
-    const form = target.closest(".edit-item-form");
     const id2 = Number(form.dataset.id);
     const errorEl = document.getElementById(`editItemError-${id2}`);
 
@@ -202,10 +204,9 @@ async function handleMenuAction(e) {
     const description = form.querySelector(".edit-description").value.trim();
     const isAvailable = form.querySelector(".edit-available").value === "true";
 
-    const submitBtn = form.querySelector("button[type='submit']");
     errorEl.style.display = "none";
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Saving...";
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving...";
 
     try {
       await api(`/menu/${id2}`, {
@@ -218,8 +219,8 @@ async function handleMenuAction(e) {
       errorEl.textContent = err.message;
       errorEl.style.display = "block";
     } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Save";
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Save";
     }
     return;
   }
