@@ -73,6 +73,9 @@ app.delete("/api/menu/:id", verifyJWT, requireRole("stallOwner"), menuController
 const analyticsController = require("./controllers/analyticsController");
 app.get("/api/analytics/performance", verifyJWT, requireRole("stallOwner"), analyticsController.getPerformance);
 
+// Satisfaction analytics route (accessible only to stall owners)
+app.get("/api/analytics/satisfaction", verifyJWT, requireRole("stallOwner"), analyticsController.getSatisfaction);
+
 // Inspections & Hygiene routes (owner only)
 const inspectionController = require("./controllers/inspectionController");
 app.get("/api/inspections/history", verifyJWT, requireRole("stallOwner"), inspectionController.getMyHygieneHistory);

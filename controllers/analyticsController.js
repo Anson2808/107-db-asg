@@ -5,6 +5,7 @@ const {
   getPopularItems,
   getPeakHours,
   getAverageRatingTrend,
+  getSatisfactionData
 } = require("../models/analyticsModel");
 
 exports.getPerformance = async (req, res, next) => {
@@ -35,6 +36,20 @@ exports.getPerformance = async (req, res, next) => {
       peakHours,
       ratingTrend,
     });
+  } catch (err) {
+    next(err);
+  }
+};
+exports.getSatisfaction = async (req, res, next) => {
+  try {
+    const stall = await getStallByOwnerId(req.user.userId);
+    if (!stall) {
+      return res.status(404).json({ error: "Stall not found" });
+    }
+
+    const data = await getSatisfactionData(stall.StallId);
+
+    res.status(200).json(data);
   } catch (err) {
     next(err);
   }

@@ -25,17 +25,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function loadAnalytics() {
   try {
-    // Grab the current filter value
     const range = document.getElementById("dateRangeFilter")?.value || 'monthly';
     
-    // Fetch both endpoints at the same time for speed
-    const [perfData, hygieneData] = await Promise.all([
+    // Fetch all endpoints concurrently
+    const [perfData, hygieneData, satisfactionData] = await Promise.all([
       api(`/analytics/performance?range=${range}`),
-      api("/inspections/history").catch(() => ({ history: [] })) // Graceful fallback if no hygiene data exists yet
+      api("/inspections/history").catch(() => ({ history: [] })),
+      api("/analytics/satisfaction").catch(() => ({ feedback: [], complaints: [] }))
     ]);
     
     renderDashboard(perfData);
     renderHygieneSection(hygieneData.history);
+    renderSatisfactionSection(satisfactionData);
   } catch (err) {
     document.getElementById("loadingState").textContent =
       "Failed to load analytics: " + err.message;
@@ -95,31 +96,22 @@ function renderRevenueChart(rows) {
     type: "line",
     data: {
       labels,
-      datasets: [
-        {
-          label: "Revenue ($)",
-          data: values,
-          borderColor: "#4F46E5",
-          backgroundColor: "rgba(79,70,229,0.08)",
-          fill: true,
-          tension: 0.3,
-          pointRadius: 4,
-          pointBackgroundColor: "#4F46E5",
-        },
-      ],
+      datasets: [{
+        label: "Revenue ($)",
+        data: values,
+        borderColor: "#4F46E5",
+        backgroundColor: "rgba(79,70,229,0.08)",
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: "#4F46E5",
+      }],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { callback: (v) => "$" + v },
-        },
-      },
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { callback: (v) => "$" + v } } },
     },
   });
 }
@@ -136,35 +128,25 @@ function renderPopularItemsChart(rows) {
 
   const labels = rows.map((r) => r.name);
   const values = rows.map((r) => Number(r.totalQty));
-
   const colors = ["#4F46E5", "#6366F1", "#818CF8", "#A5B4FC", "#C7D2FE"];
 
   popularItemsChartInstance = new Chart(ctx, {
     type: "bar",
     data: {
       labels,
-      datasets: [
-        {
-          label: "Qty Sold",
-          data: values,
-          backgroundColor: colors.slice(0, labels.length),
-          borderRadius: 6,
-        },
-      ],
+      datasets: [{
+        label: "Qty Sold",
+        data: values,
+        backgroundColor: colors.slice(0, labels.length),
+        borderRadius: 6,
+      }],
     },
     options: {
       indexAxis: "y",
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-      },
-      scales: {
-        x: {
-          beginAtZero: true,
-          ticks: { stepSize: 1 },
-        },
-      },
+      plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } },
     },
   });
 }
@@ -181,9 +163,7 @@ function renderPeakHoursChart(rows) {
 
   if (peakHoursChartInstance) peakHoursChartInstance.destroy();
 
-  // Format hours from 0-23 to 12AM-11PM
   const formatHour = (h) => h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h - 12} PM`;
-  
   const labels = rows.map((r) => formatHour(r.hour));
   const values = rows.map((r) => Number(r.volume));
 
@@ -191,27 +171,18 @@ function renderPeakHoursChart(rows) {
     type: "bar",
     data: {
       labels,
-      datasets: [
-        {
-          label: "Order Volume",
-          data: values,
-          backgroundColor: "#10B981", // Success Green
-          borderRadius: 6,
-        },
-      ],
+      datasets: [{
+        label: "Order Volume",
+        data: values,
+        backgroundColor: "#10B981",
+        borderRadius: 6,
+      }],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { stepSize: 1 },
-        },
-      },
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
     },
   });
 }
@@ -220,99 +191,82 @@ function renderPeakHoursChart(rows) {
 //   CHART 4 — Rating Trend (line chart)
 // ============================================================
 let ratingTrendChartInstance = null;
-
-const MONTH_NAMES = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 function renderRatingTrendChart(rows) {
   const ctx = document.getElementById("ratingTrendChart").getContext("2d");
 
   if (ratingTrendChartInstance) ratingTrendChartInstance.destroy();
 
-  const labels = rows.map(
-    (r) => `${MONTH_NAMES[r.month - 1]} ${r.year}`
-  );
+  const labels = rows.map((r) => `${MONTH_NAMES[r.month - 1]} ${r.year}`);
   const values = rows.map((r) => r.avgRating);
 
   ratingTrendChartInstance = new Chart(ctx, {
     type: "line",
     data: {
       labels,
-      datasets: [
-        {
-          label: "Avg Rating",
-          data: values,
-          borderColor: "#F59E0B",
-          backgroundColor: "rgba(245,158,11,0.08)",
-          fill: true,
-          tension: 0.3,
-          pointRadius: 5,
-          pointBackgroundColor: "#F59E0B",
-        },
-      ],
+      datasets: [{
+        label: "Avg Rating",
+        data: values,
+        borderColor: "#F59E0B",
+        backgroundColor: "rgba(245,158,11,0.08)",
+        fill: true,
+        tension: 0.3,
+        pointRadius: 5,
+        pointBackgroundColor: "#F59E0B",
+      }],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-      },
-      scales: {
-        y: {
-          min: 1,
-          max: 5,
-          ticks: { stepSize: 1 },
-        },
-      },
+      plugins: { legend: { display: false } },
+      scales: { y: { min: 1, max: 5, ticks: { stepSize: 1 } } },
     },
   });
 }
 
 // ============================================================
-//   HYGIENE SECTION (Chart & Table)
+//   HYGIENE SECTION
 // ============================================================
 function renderHygieneSection(history) {
   const tbody = document.getElementById("hygieneTableBody");
   const noRecords = document.getElementById("noHygieneRecords");
 
-  // 1. Render Table
   if (!history || history.length === 0) {
-    noRecords.style.display = "block";
+    if(noRecords) noRecords.style.display = "block";
     return;
   }
 
-  tbody.innerHTML = history.map(record => {
-    // Format date specifically for Singapore standards
-    const date = new Date(record.InspectionDate).toLocaleDateString('en-SG');
-    
-    let badgeClass = 'badge-unavailable'; // Default red/gray
-    if (record.Grade === 'A') badgeClass = 'badge-available'; // Green
-    if (record.Grade === 'B') badgeClass = 'badge-open'; // Blue
+  if(tbody) {
+    tbody.innerHTML = history.map(record => {
+      const date = new Date(record.InspectionDate).toLocaleDateString('en-SG');
+      let badgeClass = 'badge-unavailable';
+      if (record.Grade === 'A') badgeClass = 'badge-available';
+      if (record.Grade === 'B') badgeClass = 'badge-open';
 
-    return `
-      <tr>
-        <td>${date}</td>
-        <td><span class="badge ${badgeClass}">Grade ${record.Grade}</span></td>
-        <td><strong>${record.Score}</strong>/100</td>
-      </tr>
-      <tr>
-        <td colspan="3" style="font-size: 12px; color: var(--text-muted); padding-top: 0; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
-          Note: ${record.Violations || 'None'}
-        </td>
-      </tr>
-    `;
-  }).join("");
-
-  // 2. Render Chart
+      return `
+        <tr>
+          <td>${date}</td>
+          <td><span class="badge ${badgeClass}">Grade ${record.Grade}</span></td>
+          <td><strong>${record.Score}</strong>/100</td>
+        </tr>
+        <tr>
+          <td colspan="3" style="font-size: 12px; color: var(--text-muted); padding-top: 0; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+            Note: ${record.Violations || 'None'}
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
   renderHygieneChart(history);
 }
 
 let hygieneChartInstance = null;
 
 function renderHygieneChart(history) {
-  const ctx = document.getElementById("hygieneChart").getContext("2d");
+  const canvas = document.getElementById("hygieneChart");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
   if (hygieneChartInstance) hygieneChartInstance.destroy();
 
   const labels = history.map(r => {
@@ -325,32 +279,72 @@ function renderHygieneChart(history) {
     type: "line",
     data: {
       labels,
-      datasets: [
-        {
-          label: "Score",
-          data: values,
-          borderColor: "#10B981", 
-          backgroundColor: "rgba(16, 185, 129, 0.1)",
-          fill: true,
-          tension: 0.3,
-          pointRadius: 4,
-          pointBackgroundColor: "#10B981",
-        },
-      ],
+      datasets: [{
+        label: "Score",
+        data: values,
+        borderColor: "#10B981", 
+        backgroundColor: "rgba(16, 185, 129, 0.1)",
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: "#10B981",
+      }],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-      },
-      scales: {
-        y: {
-          min: 0,
-          max: 100,
-          ticks: { stepSize: 20 },
-        },
-      },
+      plugins: { legend: { display: false } },
+      scales: { y: { min: 0, max: 100, ticks: { stepSize: 20 } } },
     },
   });
+}
+
+// ============================================================
+//   CUSTOMER SATISFACTION SECTION
+// ============================================================
+function renderSatisfactionSection(data) {
+  const feedbackBody = document.getElementById("feedbackTableBody");
+  const noFeedback = document.getElementById("noFeedback");
+  const complaintBody = document.getElementById("complaintTableBody");
+  const noComplaints = document.getElementById("noComplaints");
+
+  // 1. Render Feedback
+  if (!data.feedback || data.feedback.length === 0) {
+    if (noFeedback) noFeedback.style.display = "block";
+  } else {
+    if (noFeedback) noFeedback.style.display = "none";
+    if (feedbackBody) {
+      feedbackBody.innerHTML = data.feedback.map(f => {
+        const date = new Date(f.CreatedAt).toLocaleDateString('en-SG');
+        return `
+          <tr>
+            <td>${date}</td>
+            <td>${escapeHtml(f.Username)}</td>
+            <td><strong>${f.Rating}</strong>/5</td>
+            <td>${escapeHtml(f.Comment)}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+  }
+
+  // 2. Render Complaints
+  if (!data.complaints || data.complaints.length === 0) {
+    if (noComplaints) noComplaints.style.display = "block";
+  } else {
+    if (noComplaints) noComplaints.style.display = "none";
+    if (complaintBody) {
+      complaintBody.innerHTML = data.complaints.map(c => {
+        const date = new Date(c.CreatedAt).toLocaleDateString('en-SG');
+        return `
+          <tr>
+            <td>${date}</td>
+            <td>${escapeHtml(c.Username)}</td>
+            <td><span class="badge badge-closed">${escapeHtml(c.Category)}</span></td>
+            <td>${escapeHtml(c.Description)}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+  }
 }
