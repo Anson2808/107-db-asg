@@ -44,6 +44,9 @@ function tr(key) {
     analytics: "Analytics",
     inspections: "Inspections",
     language: "Language",
+    theme: "Theme",
+    lightMode: "Light",
+    darkMode: "Dark",
     profile: "Profile",
   };
 
@@ -57,6 +60,16 @@ function currentLanguage() {
 function onLanguageChange(event) {
   if (typeof handleLanguageChange === "function") {
     handleLanguageChange(event);
+  }
+}
+
+function currentTheme() {
+  return typeof getTheme === "function" ? getTheme() : "light";
+}
+
+function onThemeChange(event) {
+  if (typeof handleThemeChange === "function") {
+    handleThemeChange(event);
   }
 }
 
@@ -111,12 +124,20 @@ function renderNavbar() {
               <option value="zh"${currentLanguage() === "zh" ? " selected" : ""}>中文</option>
             </select>
           </label>
+          <label class="theme-control">
+            <span>${tr("theme")}</span>
+            <select id="themeSelect" class="theme-select" aria-label="${tr("theme")}">
+              <option value="light"${currentTheme() === "light" ? " selected" : ""}>${tr("lightMode")}</option>
+              <option value="dark"${currentTheme() === "dark" ? " selected" : ""}>${tr("darkMode")}</option>
+            </select>
+          </label>
         </div>
       </div>
     </div>
   `;
 
   document.getElementById("languageSelect")?.addEventListener("change", onLanguageChange);
+  document.getElementById("themeSelect")?.addEventListener("change", onThemeChange);
   updateCartBadge();
 }
 

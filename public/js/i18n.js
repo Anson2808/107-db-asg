@@ -1,6 +1,7 @@
 "use strict";
 
 const LANGUAGE_KEY = "cowork_language";
+const THEME_KEY = "cowork_theme";
 
 const translations = {
   en: {
@@ -14,6 +15,9 @@ const translations = {
     myStall: "My Stall",
     analytics: "Analytics",
     language: "Language",
+    theme: "Theme",
+    lightMode: "Light",
+    darkMode: "Dark",
     browseMenu: "Browse Menu",
     browseMenuSubtitle: "Discover delicious food from campus stalls",
     cuisine: "Cuisine",
@@ -121,6 +125,9 @@ const translations = {
     myStall: "我的摊位",
     analytics: "分析",
     language: "语言",
+    theme: "主题",
+    lightMode: "浅色",
+    darkMode: "深色",
     browseMenu: "浏览菜单",
     browseMenuSubtitle: "探索校园摊位的美食",
     cuisine: "菜系",
@@ -249,3 +256,22 @@ function handleLanguageChange(event) {
   setLanguage(event.target.value);
   window.location.reload();
 }
+
+function getTheme() {
+  return localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
+}
+
+function setTheme(theme) {
+  localStorage.setItem(THEME_KEY, theme === "dark" ? "dark" : "light");
+  applyTheme();
+}
+
+function applyTheme() {
+  document.documentElement.dataset.theme = getTheme();
+}
+
+function handleThemeChange(event) {
+  setTheme(event.target.value);
+}
+
+applyTheme();

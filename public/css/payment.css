@@ -13,6 +13,7 @@
 .payment-option:has(input:checked) { border-color: var(--primary); background: var(--primary-tint); }
 .payment-option input { accent-color: var(--primary); }
 .payment-option-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 7px; background: #fff; color: var(--primary); border: 1px solid var(--border); font-weight: 800; }
+:root[data-theme="dark"] .payment-option-icon { background: var(--card); }
 .payment-option strong, .payment-option small { display: block; }
 .payment-option small { color: var(--text-secondary); font-size: 13px; }
 .pay-button { width: 100%; margin-top: 24px; padding: 14px; border-radius: var(--radius); background: var(--primary); color: #fff; font-size: 16px; font-weight: 700; transition: background .15s, transform .15s; }
