@@ -8,6 +8,7 @@ IF OBJECT_ID('dbo.OrderItems', 'U') IS NOT NULL DROP TABLE dbo.OrderItems;
 IF OBJECT_ID('dbo.Payments', 'U') IS NOT NULL DROP TABLE dbo.Payments;
 IF OBJECT_ID('dbo.CartItems', 'U') IS NOT NULL DROP TABLE dbo.CartItems;
 IF OBJECT_ID('dbo.MenuItemLikes', 'U') IS NOT NULL DROP TABLE dbo.MenuItemLikes;
+IF OBJECT_ID('dbo.CustomerFavoriteStalls', 'U') IS NOT NULL DROP TABLE dbo.CustomerFavoriteStalls;
 IF OBJECT_ID('dbo.Orders', 'U') IS NOT NULL DROP TABLE dbo.Orders;
 IF OBJECT_ID('dbo.Feedback', 'U') IS NOT NULL DROP TABLE dbo.Feedback;
 IF OBJECT_ID('dbo.Inspections', 'U') IS NOT NULL DROP TABLE dbo.Inspections;
@@ -39,6 +40,18 @@ CREATE TABLE dbo.Stalls (
     CuisineType NVARCHAR(50)  NOT NULL,
     Status      NVARCHAR(10)  NOT NULL DEFAULT 'open' CHECK (Status IN ('open', 'closed')),
     CONSTRAINT FK_Stalls_Owner FOREIGN KEY (OwnerId) REFERENCES dbo.Users(UserId)
+);
+
+-- ============================================================
+-- CustomerFavoriteStalls
+-- ============================================================
+CREATE TABLE dbo.CustomerFavoriteStalls (
+    UserId    INT NOT NULL,
+    StallId   INT NOT NULL,
+    CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+    PRIMARY KEY (UserId, StallId),
+    CONSTRAINT FK_FavoriteStalls_User  FOREIGN KEY (UserId)  REFERENCES dbo.Users(UserId),
+    CONSTRAINT FK_FavoriteStalls_Stall FOREIGN KEY (StallId) REFERENCES dbo.Stalls(StallId)
 );
 
 -- ============================================================
@@ -202,6 +215,12 @@ INSERT INTO dbo.MenuItems (StallId, Name, Description, Price, IsAvailable, LikeC
 (3, 'Vegetable Samosa (3 pcs)', 'Crispy triangular pastry stuffed with spiced potato and green peas',     4.00, 1, 19, '/menu_image/vegetablesamosa.jpg'),
 (3, 'Mango Lassi',              'Creamy yogurt drink blended with Alphonso mango pulp',                   3.50, 1, 27, '/menu_image/mangolassi.jpg'),
 (3, 'Masala Chai',             'Spiced Indian milk tea brewed with cardamom, ginger, and cloves',         2.00, 1, 14, '/menu_image/masalachai.jpg');
+
+-- Customer favourite stalls
+INSERT INTO dbo.CustomerFavoriteStalls (UserId, StallId) VALUES
+(4, 1),
+(4, 3),
+(5, 2);
 
 -- Inspections — Roti John Express (Stall 1)
 INSERT INTO dbo.Inspections (StallId, InspectionDate, Score, Grade, Violations, Notes) VALUES

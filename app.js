@@ -56,7 +56,11 @@ app.post("/api/auth/login", validate(loginSchema), authController.login);
 
 // Stall routes (owner only)
 const stallController = require("./controllers/stallController");
+const favoriteStallController = require("./controllers/favoriteStallController");
 app.get("/api/stalls", stallController.getAllStalls);
+app.get("/api/stalls/favorites", verifyJWT, requireRole("customer"), favoriteStallController.getMyFavoriteStalls);
+app.post("/api/stalls/:stallId/favorite", verifyJWT, requireRole("customer"), favoriteStallController.saveFavoriteStall);
+app.delete("/api/stalls/:stallId/favorite", verifyJWT, requireRole("customer"), favoriteStallController.removeFavoriteStall);
 app.get("/api/stalls/:id/reviews", stallController.getStallReviews);
 app.get("/api/stalls/my", verifyJWT, requireRole("stallOwner"), stallController.getMyStall);
 app.put("/api/stalls/my", verifyJWT, requireRole("stallOwner"), validate(updateStallSchema), stallController.updateMyStall);

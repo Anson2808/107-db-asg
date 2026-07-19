@@ -12,6 +12,7 @@
 let allItems = [];       // raw items from API (PascalCase columns)
 const stallReviews = new Map();
 const reviewSorts = new Map();
+const favoriteStallIds = new Set();
 
 /* ============================================================
    RENDER: filter dropdown
@@ -39,20 +40,9 @@ function getFilteredItems() {
   return allItems.filter((item) => item.CuisineType === cuisine);
 }
 
-function renderMenu() {
-  const container = document.getElementById('menuContent');
-  if (!container) return;
-
-  const filtered = getFilteredItems();
-
-  if (filtered.length === 0) {
-    container.innerHTML = `<div class="empty-state">${t('noMenuItems')}</div>`;
-    return;
-  }
-
-  // Group by stallId
+function groupItemsByStall(items) {
   const groups = new Map();
-  for (const item of filtered) {
+  for (const item of items) {
     const stallId = item.StallId;
     if (!groups.has(stallId)) {
       groups.set(stallId, {
@@ -65,14 +55,76 @@ function renderMenu() {
     groups.get(stallId).items.push(item);
   }
 
+  return groups;
+}
+
+function renderFavoriteStalls() {
+  const section = document.getElementById('favoriteStallsSection');
+  if (!section) return;
+
+  if (!isLoggedIn() || !isRole('customer')) {
+    section.style.display = 'none';
+    section.innerHTML = '';
+    return;
+  }
+
+  section.style.display = '';
+  const groups = [...groupItemsByStall(allItems).values()]
+    .filter((group) => favoriteStallIds.has(group.stallId));
+
+  section.innerHTML = `
+    <div class="favorite-stalls-header">
+      <div>
+        <h2>${t('favoriteStalls')}</h2>
+        <p>${t('favoriteStallsSubtitle')}</p>
+      </div>
+      <span class="badge cuisine-badge">${groups.length}</span>
+    </div>
+    ${groups.length === 0 ? `
+      <div class="favorite-stalls-empty">${t('noFavoriteStalls')}</div>
+    ` : `
+      <div class="favorite-stalls-list">
+        ${groups.map((group) => `
+          <article class="favorite-stall-card">
+            <div>
+              <h3>${escapeHtml(group.stallName)}</h3>
+              <p>${escapeHtml(group.cuisineType || '')}</p>
+            </div>
+            <button type="button" class="btn-favorite-stall is-favorite" data-stall-id="${group.stallId}">
+              &#9733; ${t('savedStall')}
+            </button>
+          </article>
+        `).join('')}
+      </div>
+    `}
+  `;
+}
+
+function renderMenu() {
+  const container = document.getElementById('menuContent');
+  if (!container) return;
+
+  const filtered = getFilteredItems();
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-state">${t('noMenuItems')}</div>`;
+    renderFavoriteStalls();
+    return;
+  }
+
   let html = '';
-  for (const [, group] of groups) {
+  for (const [, group] of groupItemsByStall(filtered)) {
+    const isFavorite = favoriteStallIds.has(group.stallId);
+
     html += `
       <div class="stall-group">
         <div class="stall-heading">
           <h2>${escapeHtml(group.stallName)}</h2>
           <span class="badge cuisine-badge">${escapeHtml(group.cuisineType)}</span>
           <span class="stall-rating" id="stall-rating-${group.stallId}">${t('reviewsLoading')}</span>
+          <button type="button" class="btn-favorite-stall${isFavorite ? ' is-favorite' : ''}" data-stall-id="${group.stallId}">
+            ${isFavorite ? `&#9733; ${t('savedStall')}` : `&#9734; ${t('saveStall')}`}
+          </button>
         </div>
         <div class="menu-grid">
           ${group.items.map(buildItemCard).join('')}
@@ -83,6 +135,7 @@ function renderMenu() {
   }
 
   container.innerHTML = html;
+  renderFavoriteStalls();
   renderLoadedReviews();
 }
 
@@ -159,14 +212,21 @@ function buildItemCard(item) {
 
 function attachMenuEvents() {
   const content = document.getElementById('menuContent');
+  const favoriteSection = document.getElementById('favoriteStallsSection');
   if (!content) return;
 
-  content.addEventListener('click', (e) => {
+  const handleClick = (e) => {
     const target = e.target;
     const likeButton = target.closest('.btn-like');
 
     if (likeButton) {
       handleLike(Number(likeButton.dataset.likeId), likeButton);
+      return;
+    }
+
+    const favoriteButton = target.closest('.btn-favorite-stall');
+    if (favoriteButton) {
+      handleFavoriteStall(Number(favoriteButton.dataset.stallId), favoriteButton);
       return;
     }
 
@@ -184,7 +244,10 @@ function attachMenuEvents() {
     if (target.classList.contains('btn-add-cart')) {
       handleAddToCart(itemId, target);
     }
-  });
+  };
+
+  content.addEventListener('click', handleClick);
+  favoriteSection?.addEventListener('click', handleClick);
 
   content.addEventListener('change', (e) => {
     const target = e.target;
@@ -194,6 +257,21 @@ function attachMenuEvents() {
     reviewSorts.set(stallId, target.value);
     loadStallReviews(stallId, target.value);
   });
+}
+
+async function loadFavoriteStalls() {
+  favoriteStallIds.clear();
+
+  if (!isLoggedIn() || !isRole('customer')) return;
+
+  try {
+    const data = await api('/stalls/favorites');
+    (data.favorites || []).forEach((favorite) => {
+      favoriteStallIds.add(Number(favorite.StallId));
+    });
+  } catch (err) {
+    console.error('Failed to load favorite stalls:', err);
+  }
 }
 
 function renderLoadedReviews() {
@@ -297,6 +375,39 @@ async function handleLike(menuItemId, buttonEl) {
   }
 }
 
+async function handleFavoriteStall(stallId, buttonEl) {
+  if (!isLoggedIn()) {
+    window.location.href = '/login.html';
+    return;
+  }
+
+  if (!isRole('customer')) {
+    buttonEl.title = t('customerOnlyFavorites');
+    return;
+  }
+
+  const shouldSave = !favoriteStallIds.has(stallId);
+  buttonEl.disabled = true;
+
+  try {
+    await api(`/stalls/${stallId}/favorite`, { method: shouldSave ? 'POST' : 'DELETE' });
+
+    if (shouldSave) {
+      favoriteStallIds.add(stallId);
+      buttonEl.title = t('savedToFavorites');
+    } else {
+      favoriteStallIds.delete(stallId);
+      buttonEl.title = t('removedFromFavorites');
+    }
+
+    renderMenu();
+  } catch (err) {
+    buttonEl.title = err.message;
+  } finally {
+    buttonEl.disabled = false;
+  }
+}
+
 function changeQty(itemId, delta) {
   const span = document.getElementById(`qty-${itemId}`);
   if (!span) return;
@@ -362,6 +473,7 @@ async function init() {
   try {
     const data = await api('/menu');
     allItems = data.items || [];
+    await loadFavoriteStalls();
   } catch (err) {
     console.error('Failed to load menu:', err);
     if (content) {
