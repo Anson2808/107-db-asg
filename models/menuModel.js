@@ -4,7 +4,7 @@ async function getAllMenuItems() {
   const result = await sql.query`
     SELECT
       m.MenuItemId, m.StallId, m.Name, m.Description,
-      m.Price, m.IsAvailable, m.LikeCount,
+      m.Price, m.IsAvailable, m.LikeCount, m.ImageUrl,
       s.StallName, s.CuisineType
     FROM MenuItems m
     JOIN Stalls s ON m.StallId = s.StallId
@@ -21,11 +21,11 @@ async function getMenuByStallId(stallId) {
   return result.recordset;
 }
 
-async function createMenuItem({ stallId, name, description, price, isAvailable }) {
+async function createMenuItem({ stallId, name, description, price, isAvailable, imageUrl }) {
   const result = await sql.query`
-    INSERT INTO MenuItems (StallId, Name, Description, Price, IsAvailable)
+    INSERT INTO MenuItems (StallId, Name, Description, Price, IsAvailable, ImageUrl)
     OUTPUT INSERTED.MenuItemId
-    VALUES (${stallId}, ${name}, ${description || null}, ${price}, ${isAvailable !== false ? 1 : 0})
+    VALUES (${stallId}, ${name}, ${description || null}, ${price}, ${isAvailable !== false ? 1 : 0}, ${imageUrl || null})
   `;
   return result.recordset[0].MenuItemId;
 }
@@ -88,6 +88,7 @@ async function updateMenuItem(menuItemId, fields) {
     Description: sql.NVarChar,
     Price: sql.Decimal(10, 2),
     IsAvailable: sql.Bit,
+    ImageUrl: sql.NVarChar,
   };
 
   const allowed = Object.keys(typeMap);

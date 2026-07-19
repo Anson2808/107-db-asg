@@ -52,6 +52,7 @@ const createMenuItemSchema = Joi.object({
   price: Joi.number().greater(0).required(),
   description: Joi.string().allow("").optional(),
   isAvailable: Joi.boolean().default(true).optional(),
+  imageUrl: Joi.string().max(255).allow("").optional(),
 });
 
 // Update menu item schema
@@ -60,6 +61,7 @@ const updateMenuItemSchema = Joi.object({
   price: Joi.number().greater(0).optional(),
   description: Joi.string().allow("").optional(),
   isAvailable: Joi.boolean().optional(),
+  imageUrl: Joi.string().max(255).allow("").optional(),
 }).min(1);
 
 // Create order schema
@@ -115,6 +117,16 @@ const updateProfileSchema = Joi.object({
   .min(1)
   .and("currentPassword", "newPassword");
 
+// Create inspection schema
+const createInspectionSchema = Joi.object({
+  stallId: Joi.number().integer().required(),
+  inspectionDate: Joi.date().iso().max("now").required(),
+  score: Joi.number().integer().min(0).max(100).required(),
+  grade: Joi.string().valid("A", "B", "C", "D").required(),
+  violations: Joi.string().max(200).allow("").optional(),
+  notes: Joi.string().max(500).allow("").optional(),
+});
+
 module.exports = {
   validate,
   registerSchema,
@@ -128,4 +140,5 @@ module.exports = {
   feedbackSchema,
   complaintSchema,
   updateProfileSchema,
+  createInspectionSchema,
 };

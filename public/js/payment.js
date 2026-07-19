@@ -55,6 +55,33 @@ async function submitPayment(event) {
   try {
     const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
     const { order } = await api('/orders', { method: 'POST', body: JSON.stringify({ items, paymentMethod }) });
+
+    if (!isLoggedIn()) {
+      // Guest: build history entry matching order-history.js contract
+      const historyEntry = {
+        orderId: order.orderId,
+        orderedAt: new Date().toISOString(),
+        total: order.total,
+        status: order.status,
+        items: items.map(({ menuItemId, quantity }) => {
+          const m = menuById.get(menuItemId);
+          return {
+            name: m.Name,
+            quantity,
+            unitPrice: Number(m.Price),
+            stallName: m.StallName,
+            cuisineType: m.CuisineType,
+          };
+        }),
+      };
+      const guestHistory = JSON.parse(localStorage.getItem('guestOrderHistory') || '[]');
+      guestHistory.unshift(historyEntry);
+      localStorage.setItem('guestOrderHistory', JSON.stringify(guestHistory));
+
+      // Clear guest cart
+      localStorage.removeItem('guest_cart');
+    }
+
     await updateCartBadge();
     message.textContent = `Order #${order.orderId} placed successfully. Redirecting…`;
     message.classList.add('success');
@@ -69,11 +96,17 @@ async function submitPayment(event) {
 
 document.addEventListener('DOMContentLoaded', async () => {
   renderNavbar();
-  if (!isLoggedIn()) { window.location.href = '/login.html'; return; }
   try {
     await loadMenu();
-    const cartRes = await api('/cart');
-    paymentCart = cartRes.cart || [];
+
+    if (isLoggedIn()) {
+      const cartRes = await api('/cart');
+      paymentCart = cartRes.cart || [];
+    } else {
+      // Guest: load from localStorage
+      paymentCart = JSON.parse(localStorage.getItem('guest_cart') || '[]');
+    }
+
     renderSummary();
   } catch (error) {
     document.getElementById('payment-message').textContent = 'Unable to load your order. Please try again.';

@@ -25,7 +25,7 @@ CREATE TABLE dbo.Users (
     PasswordHash NVARCHAR(255) NOT NULL,
     Email       NVARCHAR(255) NOT NULL,
     FullName    NVARCHAR(100) NOT NULL,
-    Role        NVARCHAR(20)  NOT NULL CHECK (Role IN ('customer', 'stallOwner')),
+    Role        NVARCHAR(20)  NOT NULL CHECK (Role IN ('customer', 'stallOwner', 'inspector')),
     CreatedAt   DATETIME      NOT NULL DEFAULT GETDATE()
 );
 
@@ -53,6 +53,7 @@ CREATE TABLE dbo.MenuItems (
     Price       DECIMAL(10,2)  NOT NULL,
     IsAvailable BIT            NOT NULL DEFAULT 1,
     LikeCount   INT            NOT NULL DEFAULT 0,
+    ImageUrl    NVARCHAR(255)  NULL,
     CONSTRAINT FK_MenuItems_Stall FOREIGN KEY (StallId) REFERENCES dbo.Stalls(StallId)
 );
 
@@ -171,6 +172,8 @@ CREATE TABLE dbo.Inspections (
     CONSTRAINT FK_Inspections_Stall FOREIGN KEY (StallId) REFERENCES dbo.Stalls(StallId)
 );
 
+GO
+
 -- ============================================================
 -- SEED DATA
 -- ============================================================
@@ -181,7 +184,8 @@ INSERT INTO dbo.Users (Username, PasswordHash, Email, FullName, Role) VALUES
 ('meiling',   '$2b$10$CDfd8zlL0WtDEFiALZ6XMO74b0YjSUs85ZC8HeeK3ojfGyH5ghTPW', 'meiling@cowork.com',  'Tan Mei Ling',     'stallOwner'),
 ('kumar_s',   '$2b$10$CDfd8zlL0WtDEFiALZ6XMO74b0YjSUs85ZC8HeeK3ojfGyH5ghTPW', 'kumar@cowork.com',    'Siva Kumar',       'stallOwner'),
 ('jane_doe',  '$2b$10$CDfd8zlL0WtDEFiALZ6XMO74b0YjSUs85ZC8HeeK3ojfGyH5ghTPW', 'jane@example.com',    'Jane Doe',         'customer'),
-('bob_tan',   '$2b$10$CDfd8zlL0WtDEFiALZ6XMO74b0YjSUs85ZC8HeeK3ojfGyH5ghTPW', 'bob@example.com',     'Bob Tan',          'customer');
+('bob_tan',   '$2b$10$CDfd8zlL0WtDEFiALZ6XMO74b0YjSUs85ZC8HeeK3ojfGyH5ghTPW', 'bob@example.com',     'Bob Tan',          'customer'),
+('nea_officer','$2b$10$KX7HzGg4HnPN09EJy/t.WO3zQqFqkV3iBzrkFnJBbzmSqe9SUJMdG', 'nea@gov.sg',          'NEA Officer',      'inspector');
 
 -- Stalls
 INSERT INTO dbo.Stalls (OwnerId, StallName, Description, CuisineType, Status) VALUES
@@ -190,31 +194,31 @@ INSERT INTO dbo.Stalls (OwnerId, StallName, Description, CuisineType, Status) VA
 (3, 'Spice Garden',      'Home-style Indian curries, biryanis, and tandoori delights.',             'Indian', 'open');
 
 -- Menu Items — Roti John Express (Stall 1)
-INSERT INTO dbo.MenuItems (StallId, Name, Description, Price, IsAvailable, LikeCount) VALUES
-(1, 'Classic Roti John',        'Toasted baguette with minced mutton, egg, and special sauce',          6.50, 1, 24),
-(1, 'Chicken Roti John',        'Crispy baguette layered with spiced chicken and onion-egg scramble',    6.00, 1, 18),
-(1, 'Cheese Roti John',         'The classic with a generous blanket of melted cheddar',                 7.50, 1, 31),
-(1, 'Mutton Kebab Wrap',        'Grilled spiced mutton skewers wrapped in flatbread with mint chutney',  8.00, 1, 15),
-(1, 'Curry Puff (2 pcs)',       'Flaky pastry filled with curried potato and chicken',                   3.50, 1, 12),
-(1, 'Teh Tarik',                'Frothy pulled milk tea — hot or iced',                                  2.50, 1, 9);
+INSERT INTO dbo.MenuItems (StallId, Name, Description, Price, IsAvailable, LikeCount, ImageUrl) VALUES
+(1, 'Classic Roti John',        'Toasted baguette with minced mutton, egg, and special sauce',          6.50, 1, 24, '/menu_image/rotijohnclassic.jpg'),
+(1, 'Chicken Roti John',        'Crispy baguette layered with spiced chicken and onion-egg scramble',    6.00, 1, 18, '/menu_image/chickenrotijohn.jpeg'),
+(1, 'Cheese Roti John',         'The classic with a generous blanket of melted cheddar',                 7.50, 1, 31, '/menu_image/cheeserotijohn.jpeg'),
+(1, 'Mutton Kebab Wrap',        'Grilled spiced mutton skewers wrapped in flatbread with mint chutney',  8.00, 1, 15, '/menu_image/muttonkebabwrap.jpg'),
+(1, 'Curry Puff (2 pcs)',       'Flaky pastry filled with curried potato and chicken',                   3.50, 1, 12, '/menu_image/currypuff.jpg'),
+(1, 'Teh Tarik',                'Frothy pulled milk tea — hot or iced',                                  2.50, 1, 9,  '/menu_image/tehtarik.jpg');
 
 -- Menu Items — Wok & Roll (Stall 2)
-INSERT INTO dbo.MenuItems (StallId, Name, Description, Price, IsAvailable, LikeCount) VALUES
-(2, 'Char Kway Teow',           'Flat rice noodles wok-fried with prawns, cockles, and dark soy',        7.00, 1, 42),
-(2, 'Hokkien Mee',              'Thick yellow noodles braised in rich prawn broth with pork belly',       7.50, 1, 35),
-(2, 'Sweet & Sour Chicken Rice', 'Crispy battered chicken in tangy sauce over steamed jasmine rice',      6.50, 1, 20),
-(2, 'Wonton Noodle Soup',       'Springy egg noodles in clear broth with handmade prawn wontons',         6.00, 1, 28),
-(2, 'Spring Rolls (4 pcs)',     'Crispy vegetable spring rolls with sweet chilli dip',                    3.00, 1, 16),
-(2, 'Iced Lemon Tea',           'Freshly brewed Ceylon tea with lemon and a hint of honey',               2.00, 1, 11);
+INSERT INTO dbo.MenuItems (StallId, Name, Description, Price, IsAvailable, LikeCount, ImageUrl) VALUES
+(2, 'Char Kway Teow',           'Flat rice noodles wok-fried with prawns, cockles, and dark soy',        7.00, 1, 42, '/menu_image/charkwayteow.jpg'),
+(2, 'Hokkien Mee',              'Thick yellow noodles braised in rich prawn broth with pork belly',       7.50, 1, 35, '/menu_image/hokkienmee.jpg'),
+(2, 'Sweet & Sour Chicken Rice', 'Crispy battered chicken in tangy sauce over steamed jasmine rice',      6.50, 1, 20, '/menu_image/sweetandsourchickenrice.jpg'),
+(2, 'Wonton Noodle Soup',       'Springy egg noodles in clear broth with handmade prawn wontons',         6.00, 1, 28, '/menu_image/wontonnoodlesoup.jpg'),
+(2, 'Spring Rolls (4 pcs)',     'Crispy vegetable spring rolls with sweet chilli dip',                    3.00, 1, 16, '/menu_image/springroll.jpg'),
+(2, 'Iced Lemon Tea',           'Freshly brewed Ceylon tea with lemon and a hint of honey',               2.00, 1, 11, '/menu_image/icelemontea.jpg');
 
 -- Menu Items — Spice Garden (Stall 3)
-INSERT INTO dbo.MenuItems (StallId, Name, Description, Price, IsAvailable, LikeCount) VALUES
-(3, 'Chicken Biryani',          'Fragrant basmati rice layered with marinated chicken and saffron',       9.00, 1, 38),
-(3, 'Butter Chicken',           'Tandoori chicken simmered in creamy tomato-butter gravy',                8.50, 1, 45),
-(3, 'Garlic Naan',              'Soft leavened flatbread brushed with garlic butter',                     2.50, 1, 22),
-(3, 'Vegetable Samosa (3 pcs)', 'Crispy triangular pastry stuffed with spiced potato and green peas',     4.00, 1, 19),
-(3, 'Mango Lassi',              'Creamy yogurt drink blended with Alphonso mango pulp',                   3.50, 1, 27),
-(3, 'Masala Chai',             'Spiced Indian milk tea brewed with cardamom, ginger, and cloves',         2.00, 1, 14);
+INSERT INTO dbo.MenuItems (StallId, Name, Description, Price, IsAvailable, LikeCount, ImageUrl) VALUES
+(3, 'Chicken Biryani',          'Fragrant basmati rice layered with marinated chicken and saffron',       9.00, 1, 38, '/menu_image/chickenbiryani.jpg'),
+(3, 'Butter Chicken',           'Tandoori chicken simmered in creamy tomato-butter gravy',                8.50, 1, 45, '/menu_image/butterchicken.jpg'),
+(3, 'Garlic Naan',              'Soft leavened flatbread brushed with garlic butter',                     2.50, 1, 22, '/menu_image/garlicnaan.jpg'),
+(3, 'Vegetable Samosa (3 pcs)', 'Crispy triangular pastry stuffed with spiced potato and green peas',     4.00, 1, 19, '/menu_image/vegetablesamosa.jpg'),
+(3, 'Mango Lassi',              'Creamy yogurt drink blended with Alphonso mango pulp',                   3.50, 1, 27, '/menu_image/mangolassi.jpg'),
+(3, 'Masala Chai',             'Spiced Indian milk tea brewed with cardamom, ginger, and cloves',         2.00, 1, 14, '/menu_image/masalachai.jpg');
 
 -- Inspections — Roti John Express (Stall 1)
 INSERT INTO dbo.Inspections (StallId, InspectionDate, Score, Grade, Violations, Notes) VALUES

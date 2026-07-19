@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inspections — CoWork</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<nav id="navbar"></nav>
+
+<main class="page-container">
+  <section class="menu-header">
+    <h1 data-i18n="inspectionsTitle">Inspections</h1>
+    <p data-i18n="inspectionsSubtitle">Record and review food hygiene inspections for campus stalls</p>
+  </section>
+
+  <section class="card" id="inspectionFormCard">
+    <div id="inspectionMessage" class="alert" style="display:none"></div>
+
+    <form id="inspectionForm" novalidate>
+      <div class="form-group">
+        <label for="stallId" class="form-label" data-i18n="foodStall">Food Stall</label>
+        <select id="stallId" class="form-select" required>
+          <option value="" data-i18n="selectStall">Select a stall</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="inspectionDate" class="form-label" data-i18n="inspectionDate">Date</label>
+          <input type="date" id="inspectionDate" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label for="score" class="form-label" data-i18n="score">Score (0–100)</label>
+          <input type="number" id="score" class="form-input" min="0" max="100" required>
+        </div>
+        <div class="form-group">
+          <label for="grade" class="form-label" data-i18n="grade">Grade</label>
+          <select id="grade" class="form-select" required>
+            <option value="">—</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="violations" class="form-label" data-i18n="violations">Violations</label>
+        <input type="text" id="violations" class="form-input" maxlength="200" placeholder="e.g. Cross-contamination flag, Improper storage temp">
+      </div>
+
+      <div class="form-group">
+        <label for="notes" class="form-label" data-i18n="notes">Notes</label>
+        <textarea id="notes" class="form-textarea" maxlength="500" placeholder="Additional observations..."></textarea>
+      </div>
+
+      <button type="submit" id="submitInspectionBtn" class="btn btn-primary" data-i18n="submitInspection">Submit Inspection</button>
+    </form>
+  </section>
+
+  <section class="card" id="inspectionHistoryCard">
+    <h2 class="card-title" data-i18n="inspectionHistory">Inspection History</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th data-i18n="inspectionDate">Date</th>
+            <th data-i18n="score">Score</th>
+            <th data-i18n="grade">Grade</th>
+            <th data-i18n="violations">Violations</th>
+            <th data-i18n="notes">Notes</th>
+          </tr>
+        </thead>
+        <tbody id="historyTableBody">
+          <tr>
+            <td colspan="5" class="empty-state" data-i18n="noInspections">Select a stall to view its inspection history.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script src="/js/api.js"></script>
+<script src="/js/i18n.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/inspector.js"></script>
+
+</body>
+</html>

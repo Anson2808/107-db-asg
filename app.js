@@ -42,8 +42,9 @@ const {
   feedbackSchema,
   complaintSchema,
   updateProfileSchema,
+  createInspectionSchema,
 } = require("./middlewares/validateMiddleware");
-const { verifyJWT, requireRole } = require("./middlewares/authMiddleware");
+const { verifyJWT, requireRole, optionalAuth } = require("./middlewares/authMiddleware");
 
 // ==========================================
 // ROUTES
@@ -79,6 +80,8 @@ app.get("/api/analytics/satisfaction", verifyJWT, requireRole("stallOwner"), ana
 // Inspections & Hygiene routes (owner only)
 const inspectionController = require("./controllers/inspectionController");
 app.get("/api/inspections/history", verifyJWT, requireRole("stallOwner"), inspectionController.getMyHygieneHistory);
+app.post("/api/inspections", verifyJWT, requireRole("inspector"), validate(createInspectionSchema), inspectionController.addInspection);
+app.get("/api/inspections/stall/:stallId", verifyJWT, requireRole("inspector"), inspectionController.getStallInspections);
 
 // Feedback routes (customer only)
 const feedbackController = require("./controllers/feedbackController");
@@ -91,7 +94,7 @@ app.post("/api/complaints", verifyJWT, requireRole("customer"), validate(complai
 // Order routes (any logged-in user)
 const orderController = require("./controllers/orderController");
 app.get("/api/orders/history", verifyJWT, orderController.getMyOrderHistory);
-app.post("/api/orders", verifyJWT, validate(createOrderSchema), orderController.placeOrder);
+app.post("/api/orders", optionalAuth, validate(createOrderSchema), orderController.placeOrder);
 
 // Cart routes (any logged-in user)
 const cartController = require("./controllers/cartController");

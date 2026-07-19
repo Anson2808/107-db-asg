@@ -7,7 +7,8 @@ async function getInspectionHistory(stallId) {
       InspectionDate,
       Grade,
       Score,
-      Violations
+      Violations,
+      Notes
     FROM Inspections
     WHERE StallId = ${stallId}
     ORDER BY InspectionDate ASC
@@ -15,4 +16,13 @@ async function getInspectionHistory(stallId) {
   return result.recordset;
 }
 
-module.exports = { getInspectionHistory };
+async function addInspection({ stallId, inspectionDate, score, grade, violations, notes }) {
+  const result = await sql.query`
+    INSERT INTO Inspections (StallId, InspectionDate, Score, Grade, Violations, Notes)
+    OUTPUT INSERTED.InspectionId
+    VALUES (${stallId}, ${inspectionDate}, ${score}, ${grade}, ${violations || null}, ${notes || null})
+  `;
+  return result.recordset[0].InspectionId;
+}
+
+module.exports = { getInspectionHistory, addInspection };

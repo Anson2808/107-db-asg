@@ -12,7 +12,8 @@ exports.getMyOrderHistory = async (req, res, next) => {
 exports.placeOrder = async (req, res, next) => {
   try {
     const { items, paymentMethod } = req.body;
-    const order = await createOrder(req.user.userId, items, paymentMethod);
+    const userId = req.user ? req.user.userId : null;
+    const order = await createOrder(userId, items, paymentMethod);
     res.status(201).json({ order });
   } catch (err) {
     next(err);

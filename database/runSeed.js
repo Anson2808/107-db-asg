@@ -9,7 +9,13 @@ async function runSeed() {
   const seedSql = fs.readFileSync(seedPath, "utf8");
 
   await sql.connect(dbConfig);
-  await sql.query(seedSql);
+
+  // Split on GO (case-insensitive) to run as separate batches
+  const batches = seedSql.split(/\n\s*GO\s*\n/i).filter(b => b.trim());
+  for (const batch of batches) {
+    await sql.query(batch);
+  }
+
   console.log(`Seeded database "${dbConfig.database}" on ${dbConfig.server}`);
 }
 

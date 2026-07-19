@@ -114,10 +114,13 @@ async function createOrder(userId, items, paymentMethod) {
         VALUES (@OrderId, @Amount, @Method, 'Success')
       `);
 
-    // Keep the server-side cart in sync with a completed checkout.
-    await new sql.Request(transaction)
-      .input("UserId", sql.Int, userId)
-      .query("DELETE FROM CartItems WHERE UserId = @UserId");
+    // Keep the server-side cart in sync with a completed checkout
+    // (only for logged-in users; guests use localStorage)
+    if (userId) {
+      await new sql.Request(transaction)
+        .input("UserId", sql.Int, userId)
+        .query("DELETE FROM CartItems WHERE UserId = @UserId");
+    }
 
     await transaction.commit();
 

@@ -132,6 +132,10 @@ function renderMenuTable(menu) {
                 <option value="false" ${item.IsAvailable ? "" : "selected"}>No</option>
               </select>
             </div>
+            <div class="form-group">
+              <label class="form-label">Image URL</label>
+              <input type="text" class="form-input edit-imageUrl" value="${escapeAttr(item.ImageUrl || "")}" placeholder="e.g. /menu_image/dish.jpg">
+            </div>
             <div style="display:flex; gap:8px">
               <button type="submit" class="btn btn-primary btn-sm">Save</button>
               <button type="button" class="btn btn-outline btn-sm cancel-edit-btn" data-id="${item.MenuItemId}">Cancel</button>
@@ -203,6 +207,7 @@ async function handleMenuAction(e) {
     const price = parseFloat(form.querySelector(".edit-price").value);
     const description = form.querySelector(".edit-description").value.trim();
     const isAvailable = form.querySelector(".edit-available").value === "true";
+    const imageUrl = form.querySelector(".edit-imageUrl").value.trim();
 
     errorEl.style.display = "none";
     saveBtn.disabled = true;
@@ -211,7 +216,7 @@ async function handleMenuAction(e) {
     try {
       await api(`/menu/${id2}`, {
         method: "PUT",
-        body: JSON.stringify({ name, price, description, isAvailable }),
+        body: JSON.stringify({ name, price, description, isAvailable, imageUrl }),
       });
       showToast("Menu item updated.", "success");
       await loadDashboard();
@@ -256,6 +261,7 @@ async function handleAddItem(e) {
     price: parseFloat(document.getElementById("addPrice").value),
     description: document.getElementById("addDescription").value.trim(),
     isAvailable: document.getElementById("addAvailable").value === "true",
+    imageUrl: document.getElementById("addImageUrl").value.trim(),
   };
 
   try {

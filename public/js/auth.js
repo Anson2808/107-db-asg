@@ -42,6 +42,7 @@ function tr(key) {
     feedbackComplaint: "Feedback / Complaint",
     myStall: "My Stall",
     analytics: "Analytics",
+    inspections: "Inspections",
     language: "Language",
     profile: "Profile",
   };
@@ -78,11 +79,13 @@ function renderNavbar() {
       leftLinks += `<a href="/stall-analytics.html">${tr("analytics")}</a>`;
     } else if (user.role === "customer") {
       leftLinks += `<a href="/feedback.html">${tr("feedbackComplaint")}</a>`;
+    } else if (user.role === "inspector") {
+      leftLinks += `<a href="/inspector.html">${tr("inspections")}</a>`;
     }
     leftLinks += `<a href="/order-history.html">${tr("orderHistory")}</a>`;
     leftLinks += `<a href="/profile.html">${tr("profile")}</a>`;
     rightLinks = `
-      <a href="/cart.html">${tr("cart")} <span id="cart-badge" class="badge cart-badge-nav" style="display:none">0</span></a>
+      ${user.role !== "inspector" ? `<a href="/cart.html">${tr("cart")} <span id="cart-badge" class="badge cart-badge-nav" style="display:none">0</span></a>` : ""}
       <span class="navbar-user">${escapeHtml(user.username)}</span>
       <button onclick="logout()">${tr("logout")}</button>
     `;
@@ -133,7 +136,11 @@ async function updateCartBadge() {
   if (!badge) return;
 
   if (!isLoggedIn()) {
-    badge.style.display = "none";
+    // Guest: sum quantities from localStorage guest_cart
+    const guestCart = JSON.parse(localStorage.getItem('guest_cart') || '[]');
+    const totalQty = guestCart.reduce((sum, item) => sum + (item.quantity || 0), 0);
+    badge.textContent = totalQty;
+    badge.style.display = totalQty > 0 ? "" : "none";
     return;
   }
 

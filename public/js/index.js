@@ -111,6 +111,7 @@ function buildItemCard(item) {
 
   return `
     <div class="menu-card${isAvail ? '' : ' menu-card--unavailable'}">
+      ${item.ImageUrl ? `<div class="menu-card-img"><img src="${escapeHtml(item.ImageUrl)}" alt="${escapeHtml(item.Name)}" loading="lazy" onerror="this.closest('.menu-card-img').remove()"></div>` : ''}
       <div class="menu-card-body">
         <div class="menu-card-header">
           <h3 class="menu-card-name">${escapeHtml(item.Name)}</h3>
@@ -303,16 +304,6 @@ function changeQty(itemId, delta) {
 }
 
 async function handleAddToCart(menuItemId, buttonEl) {
-  if (!isLoggedIn()) {
-    window.location.href = '/login.html';
-    return;
-  }
-
-  if (!isRole('customer')) {
-    alert('Only customers can add items to the cart.');
-    return;
-  }
-
   // Read current qty from the stepper
   const qtySpan = document.getElementById(`qty-${menuItemId}`);
   const qty = qtySpan ? Math.max(1, parseInt(qtySpan.textContent, 10) || 1) : 1;
@@ -320,11 +311,23 @@ async function handleAddToCart(menuItemId, buttonEl) {
   buttonEl.disabled = true;
 
   try {
-    // Write to backend database cart
-    await api('/cart', {
-      method: 'POST',
-      body: JSON.stringify({ menuItemId, quantity: qty })
-    });
+    if (isLoggedIn()) {
+      // Write to backend database cart
+      await api('/cart', {
+        method: 'POST',
+        body: JSON.stringify({ menuItemId, quantity: qty })
+      });
+    } else {
+      // Guest cart in localStorage
+      const guestCart = JSON.parse(localStorage.getItem('guest_cart') || '[]');
+      const existing = guestCart.find((c) => c.menuItemId === menuItemId);
+      if (existing) {
+        existing.quantity += qty;
+      } else {
+        guestCart.push({ menuItemId, quantity: qty });
+      }
+      localStorage.setItem('guest_cart', JSON.stringify(guestCart));
+    }
 
     // Visual confirmation
     const originalText = buttonEl.textContent;

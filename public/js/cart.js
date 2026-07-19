@@ -25,29 +25,6 @@ const CART_CONFIG = Object.freeze({
   MIN_QUANTITY: 1                      // below this, the line is removed instead
 });
 
-// Images are intentionally used only in the cart. Keys match MenuItemId values
-// from database/seed.sql, so a selected cart item always receives its own photo.
-const MENU_IMAGE_PATHS = Object.freeze({
-  1: "/menu_image/rotijohnclassic.jpg",
-  2: "/menu_image/chickenrotijohn.jpeg",
-  3: "/menu_image/cheeserotijohn.jpeg",
-  4: "/menu_image/muttonkebabwrap.jpg",
-  5: "/menu_image/currypuff.jpg",
-  6: "/menu_image/tehtarik.jpg",
-  7: "/menu_image/charkwayteow.jpg",
-  8: "/menu_image/hokkienmee.jpg",
-  9: "/menu_image/sweetandsourchickenrice.jpg",
-  10: "/menu_image/wontonnoodlesoup.jpg",
-  11: "/menu_image/springroll.jpg",
-  12: "/menu_image/icelemontea.jpg",
-  13: "/menu_image/chickenbiryani.jpg",
-  14: "/menu_image/butterchicken.jpg",
-  15: "/menu_image/garlicnaan.jpg",
-  16: "/menu_image/vegetablesamosa.jpg",
-  17: "/menu_image/mangolassi.jpg",
-  18: "/menu_image/masalachai.jpg",
-});
-
 /* ============================================================
    IN-MEMORY STATE
 ============================================================ */
@@ -55,12 +32,13 @@ const MENU_IMAGE_PATHS = Object.freeze({
 /**
  * cartItems — the user's cart rows as returned by GET /api/cart:
  * [{ cartItemId, menuItemId, name, stallName, unitPrice, quantity, lineTotal }]
+ * For guests, localStorage shape: [{ menuItemId, quantity }]
  */
 let cartItems = [];
 
 /**
  * menuItemsCache — /api/menu items mapped to camelCase:
- * [{ menuItemId, stallId, stallName, name, description, price, isAvailable }]
+ * [{ menuItemId, stallId, stallName, name, description, price, isAvailable, imageUrl }]
  */
 let menuItemsCache = [];
 
@@ -82,7 +60,8 @@ async function fetchMenuItems() {
     name: item.Name,
     description: item.Description || '',
     price: Number(item.Price),
-    isAvailable: !!item.IsAvailable
+    isAvailable: !!item.IsAvailable,
+    imageUrl: item.ImageUrl || null
   }));
 }
 
@@ -90,6 +69,11 @@ async function fetchMenuItems() {
  * GET /api/cart — fetches user's cart from database.
  */
 async function fetchCart() {
+  if (!isLoggedIn()) {
+    // Guest: read from localStorage
+    cartItems = JSON.parse(localStorage.getItem('guest_cart') || '[]');
+    return;
+  }
   try {
     const res = await api('/cart');
     cartItems = res.cart || [];
@@ -108,6 +92,19 @@ async function fetchCart() {
  * Removes a single cart line entirely from the database.
  */
 async function removeFromCart(menuItemId) {
+  if (!isLoggedIn()) {
+    // Guest: mutate localStorage
+    const guestCart = JSON.parse(localStorage.getItem('guest_cart') || '[]');
+    const idx = guestCart.findIndex((c) => c.menuItemId === menuItemId);
+    if (idx !== -1) {
+      guestCart.splice(idx, 1);
+      localStorage.setItem('guest_cart', JSON.stringify(guestCart));
+    }
+    await fetchCart();
+    renderCart();
+    await updateCartBadge();
+    return;
+  }
   const item = cartItems.find((c) => c.menuItemId === menuItemId);
   if (!item) {
     console.error(`removeFromCart failed: menuItemId ${menuItemId} not in cart`);
@@ -129,6 +126,27 @@ async function removeFromCart(menuItemId) {
  * Increases or decreases a cart line's quantity in the database.
  */
 async function updateQuantity(menuItemId, delta) {
+  if (!isLoggedIn()) {
+    // Guest: mutate localStorage
+    const guestCart = JSON.parse(localStorage.getItem('guest_cart') || '[]');
+    const item = guestCart.find((c) => c.menuItemId === menuItemId);
+    if (!item) {
+      console.error(`updateQuantity failed: menuItemId ${menuItemId} not in guest cart`);
+      return;
+    }
+    const newQty = item.quantity + delta;
+    if (newQty < CART_CONFIG.MIN_QUANTITY) {
+      await removeFromCart(menuItemId);
+      return;
+    }
+    item.quantity = newQty;
+    localStorage.setItem('guest_cart', JSON.stringify(guestCart));
+    await fetchCart();
+    renderCart();
+    await updateCartBadge();
+    return;
+  }
+
   const item = cartItems.find((c) => c.menuItemId === menuItemId);
   if (!item) {
     console.error(`updateQuantity failed: menuItemId ${menuItemId} not in cart`);
@@ -167,10 +185,6 @@ async function updateQuantity(menuItemId, delta) {
  */
 function getMenuItemById(menuItemId) {
   return menuItemsCache.find((item) => item.menuItemId === menuItemId) || null;
-}
-
-function getMenuItemImage(menuItemId) {
-  return MENU_IMAGE_PATHS[menuItemId] || "/menu_image/menu.jpeg";
 }
 
 /* ============================================================
@@ -292,7 +306,7 @@ function buildCartItemMarkup(cartItem) {
   return `
     <li class="cart-item" data-item-id="${menuItem.menuItemId}">
       <div class="cart-item-image">
-        <img src="${getMenuItemImage(menuItem.menuItemId)}" alt="${menuItem.name}" onerror="this.src='/menu_image/menu.jpeg'">
+        <img src="${menuItem.imageUrl || '/menu_image/menu.jpeg'}" alt="${menuItem.name}" onerror="this.src='/menu_image/menu.jpeg'">
       </div>
       <div class="cart-item-details">
         <h3 class="cart-item-name">${menuItem.name}</h3>
@@ -428,15 +442,10 @@ function attachCartEventListeners() {
 
 /**
  * initCart()
- * Entry point — requires login, loads the menu cache and the
- * user's cart from the API, then renders and wires up events.
+ * Entry point — loads the menu cache and the
+ * user's cart (API or localStorage), then renders and wires up events.
  */
 async function initCart() {
-  if (!isLoggedIn()) {
-    window.location.href = '/login.html';
-    return;
-  }
-
   try {
     menuItemsCache = await fetchMenuItems();
     await fetchCart();
