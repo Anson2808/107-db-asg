@@ -23,6 +23,44 @@ async function getFeedbackById(feedbackId) {
   return result.recordset[0];
 }
 
+async function getFeedbackByUserId(userId) {
+  const result = await sql.query`
+    SELECT
+      f.FeedbackId, f.StallId, f.UserId, f.Rating, f.Category, f.Comment, f.CreatedAt,
+      s.StallName, s.CuisineType
+    FROM Feedback f
+    JOIN Stalls s ON f.StallId = s.StallId
+    WHERE f.UserId = ${userId}
+    ORDER BY f.CreatedAt DESC
+  `;
+
+  return result.recordset;
+}
+
+async function updateFeedback({ feedbackId, userId, rating, comment, category }) {
+  const result = await sql.query`
+    UPDATE Feedback
+    SET Rating = ${rating},
+        Comment = ${comment},
+        Category = ${category || null}
+    OUTPUT
+      INSERTED.FeedbackId, INSERTED.StallId, INSERTED.UserId,
+      INSERTED.Rating, INSERTED.Category, INSERTED.Comment, INSERTED.CreatedAt
+    WHERE FeedbackId = ${feedbackId} AND UserId = ${userId}
+  `;
+
+  return result.recordset[0];
+}
+
+async function deleteFeedback({ feedbackId, userId }) {
+  const result = await sql.query`
+    DELETE FROM Feedback
+    WHERE FeedbackId = ${feedbackId} AND UserId = ${userId}
+  `;
+
+  return result.rowsAffected[0] > 0;
+}
+
 async function getReviewsByStallId(stallId, sort = "newest") {
   const orderClauses = {
     highest: "f.Rating DESC, f.CreatedAt DESC",
@@ -59,4 +97,12 @@ async function getReviewSummaryByStallId(stallId) {
   return result.recordset[0];
 }
 
-module.exports = { createFeedback, getFeedbackById, getReviewsByStallId, getReviewSummaryByStallId };
+module.exports = {
+  createFeedback,
+  getFeedbackById,
+  getFeedbackByUserId,
+  updateFeedback,
+  deleteFeedback,
+  getReviewsByStallId,
+  getReviewSummaryByStallId,
+};

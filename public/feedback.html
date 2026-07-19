@@ -59,6 +59,16 @@
       <button type="submit" id="submitFeedbackBtn" class="btn btn-primary" data-i18n="submitFeedback">Submit Feedback</button>
     </form>
   </section>
+
+  <section class="card feedback-card my-feedback-card">
+    <div class="card-header">
+      <h2 class="table-title" data-i18n="myFeedback">My Submitted Feedback</h2>
+      <p class="card-subtitle" data-i18n="myFeedbackSubtitle">Edit or delete feedback you have submitted</p>
+    </div>
+    <div id="myFeedbackList" class="my-feedback-list">
+      <div class="empty-state" data-i18n="loadingFeedback">Loading feedback...</div>
+    </div>
+  </section>
 </main>
 
 <script src="/js/api.js"></script>
