@@ -21,6 +21,16 @@ document.addEventListener("DOMContentLoaded", () => {
   if (filterDropdown) {
     filterDropdown.addEventListener("change", loadAnalytics);
   }
+
+  // Feedback sort filter — re-renders from cached data, no API call
+  const sortFilter = document.getElementById("feedbackSortFilter");
+  if (sortFilter) {
+    sortFilter.addEventListener("change", () => {
+      if (window._satisfactionRows) {
+        renderFeedbackTable(window._satisfactionRows);
+      }
+    });
+  }
 });
 
 async function loadAnalytics() {
@@ -31,7 +41,7 @@ async function loadAnalytics() {
     const [perfData, hygieneData, satisfactionData] = await Promise.all([
       api(`/analytics/performance?range=${range}`),
       api("/inspections/history").catch(() => ({ history: [] })),
-      api("/analytics/satisfaction").catch(() => ({ feedback: [], complaints: [] }))
+      api("/analytics/satisfaction").catch(() => ({ feedback: [] }))
     ]);
     
     renderDashboard(perfData);
@@ -302,49 +312,47 @@ function renderHygieneChart(history) {
 // ============================================================
 //   CUSTOMER SATISFACTION SECTION
 // ============================================================
+let satisfactionRows = [];
+
 function renderSatisfactionSection(data) {
+  satisfactionRows = (data && data.feedback) ? data.feedback : [];
+  window._satisfactionRows = satisfactionRows;
+  renderFeedbackTable(satisfactionRows);
+}
+
+function renderFeedbackTable(rows) {
   const feedbackBody = document.getElementById("feedbackTableBody");
   const noFeedback = document.getElementById("noFeedback");
-  const complaintBody = document.getElementById("complaintTableBody");
-  const noComplaints = document.getElementById("noComplaints");
+  const sortValue = document.getElementById("feedbackSortFilter")?.value || "newest";
 
-  // 1. Render Feedback
-  if (!data.feedback || data.feedback.length === 0) {
+  if (!rows || rows.length === 0) {
     if (noFeedback) noFeedback.style.display = "block";
-  } else {
-    if (noFeedback) noFeedback.style.display = "none";
-    if (feedbackBody) {
-      feedbackBody.innerHTML = data.feedback.map(f => {
-        const date = new Date(f.CreatedAt).toLocaleDateString('en-SG');
-        return `
-          <tr>
-            <td>${date}</td>
-            <td>${escapeHtml(f.Username)}</td>
-            <td><strong>${f.Rating}</strong>/5</td>
-            <td>${escapeHtml(f.Comment)}</td>
-          </tr>
-        `;
-      }).join("");
-    }
+    if (feedbackBody) feedbackBody.innerHTML = "";
+    return;
   }
 
-  // 2. Render Complaints
-  if (!data.complaints || data.complaints.length === 0) {
-    if (noComplaints) noComplaints.style.display = "block";
-  } else {
-    if (noComplaints) noComplaints.style.display = "none";
-    if (complaintBody) {
-      complaintBody.innerHTML = data.complaints.map(c => {
-        const date = new Date(c.CreatedAt).toLocaleDateString('en-SG');
-        return `
-          <tr>
-            <td>${date}</td>
-            <td>${escapeHtml(c.Username)}</td>
-            <td><span class="badge badge-closed">${escapeHtml(c.Category)}</span></td>
-            <td>${escapeHtml(c.Description)}</td>
-          </tr>
-        `;
-      }).join("");
-    }
+  if (noFeedback) noFeedback.style.display = "none";
+
+  // Sort a copy
+  const sorted = [...rows].sort((a, b) => {
+    if (sortValue === "lowest") return a.Rating - b.Rating;
+    if (sortValue === "highest") return b.Rating - a.Rating;
+    // newest: API order is already DESC by CreatedAt, but ensure stable
+    return new Date(b.CreatedAt) - new Date(a.CreatedAt);
+  });
+
+  if (feedbackBody) {
+    feedbackBody.innerHTML = sorted.map(f => {
+      const date = new Date(f.CreatedAt).toLocaleDateString("en-SG");
+      return `
+        <tr>
+          <td>${date}</td>
+          <td>${escapeHtml(f.Username)}</td>
+          <td><strong>${f.Rating}</strong>/5</td>
+          <td>${f.Category ? `<span class="badge badge-closed">${escapeHtml(f.Category)}</span>` : "—"}</td>
+          <td>${escapeHtml(f.Comment)}</td>
+        </tr>
+      `;
+    }).join("");
   }
 }

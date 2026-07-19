@@ -78,26 +78,14 @@ async function getAverageRatingTrend(stallId) {
 }
 
 async function getSatisfactionData(stallId) {
-  const feedbackResult = await sql.query`
-    SELECT f.Rating, f.Comment, f.CreatedAt, u.Username
+  const result = await sql.query`
+    SELECT f.Rating, f.Category, f.Comment, f.CreatedAt, u.Username
     FROM Feedback f
     JOIN Users u ON f.UserId = u.UserId
     WHERE f.StallId = ${stallId}
     ORDER BY f.CreatedAt DESC
   `;
-
-  const complaintResult = await sql.query`
-    SELECT c.Category, c.Description, c.CreatedAt, u.Username
-    FROM Complaints c
-    JOIN Users u ON c.UserId = u.UserId
-    WHERE c.StallId = ${stallId}
-    ORDER BY c.CreatedAt DESC
-  `;
-
-  return {
-    feedback: feedbackResult.recordset,
-    complaints: complaintResult.recordset
-  };
+  return { feedback: result.recordset };
 }
 
 module.exports = {

@@ -96,6 +96,7 @@ function buildReviewsPanel(stallId) {
         <select class="form-select review-sort" data-stall-id="${stallId}" aria-label="Sort reviews">
           <option value="newest"${sort === 'newest' ? ' selected' : ''}>${t('newest')}</option>
           <option value="highest"${sort === 'highest' ? ' selected' : ''}>${t('highestRating')}</option>
+          <option value="lowest"${sort === 'lowest' ? ' selected' : ''}>${t('lowestRating')}</option>
         </select>
       </div>
       <div class="reviews-list" id="reviews-list-${stallId}">
@@ -252,6 +253,7 @@ function renderStallReviews(stallId, data) {
           <strong>${escapeHtml(review.Username || t('customer'))}</strong>
           <span>${escapeHtml(String(review.Rating))} / 5</span>
         </div>
+        ${review.Category ? `<div style="margin-bottom:4px"><span class="badge badge-closed">${escapeHtml(review.Category)}</span></div>` : ''}
         <p>${escapeHtml(review.Comment)}</p>
         ${date ? `<div class="review-date">${escapeHtml(date)}</div>` : ''}
       </article>

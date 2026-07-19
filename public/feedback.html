@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Feedback & Complaint - CoWork</title>
+  <title>Feedback — CoWork</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
@@ -12,8 +12,8 @@
 
 <main class="page-container">
   <section class="menu-header">
-    <h1 data-i18n="feedbackComplaintTitle">Feedback & Complaint</h1>
-    <p data-i18n="feedbackComplaintSubtitle">Share your experience or report an issue for a campus stall</p>
+    <h1 data-i18n="feedbackTitle">Feedback</h1>
+    <p data-i18n="feedbackSubtitle">Share your experience or report an issue for a campus stall</p>
   </section>
 
   <section class="card feedback-card">
@@ -21,21 +21,13 @@
 
     <form id="feedbackForm" novalidate>
       <div class="form-group">
-        <label for="requestType" class="form-label" data-i18n="type">Type</label>
-        <select id="requestType" class="form-select" required>
-          <option value="feedback" data-i18n="feedback">Feedback</option>
-          <option value="complaint" data-i18n="complaint">Complaint</option>
-        </select>
-      </div>
-
-      <div class="form-group">
         <label for="stallId" class="form-label" data-i18n="foodStall">Food Stall</label>
         <select id="stallId" class="form-select" required>
           <option value="" data-i18n="selectStall">Select a stall</option>
         </select>
       </div>
 
-      <div class="form-group" id="ratingGroup">
+      <div class="form-group">
         <label for="rating" class="form-label" data-i18n="rating">Rating</label>
         <select id="rating" class="form-select" required>
           <option value="" data-i18n="selectRating">Select a rating</option>
@@ -47,15 +39,15 @@
         </select>
       </div>
 
-      <div class="form-group" id="categoryGroup" style="display:none">
-        <label for="category" class="form-label" data-i18n="category">Category</label>
+      <div class="form-group">
+        <label for="category" class="form-label" data-i18n="category">Category (for complaints)</label>
         <select id="category" class="form-select">
-          <option value="" data-i18n="selectCategory">Select a category</option>
-          <option value="Poor hygiene" data-i18n="poorHygiene">Poor hygiene</option>
-          <option value="Bad service" data-i18n="badService">Bad service</option>
-          <option value="Wrong order" data-i18n="wrongOrder">Wrong order</option>
-          <option value="Food quality" data-i18n="foodQuality">Food quality</option>
-          <option value="Other" data-i18n="other">Other</option>
+          <option value="" data-i18n="generalFeedback">General feedback</option>
+          <option value="Hygiene">Hygiene</option>
+          <option value="Service">Service</option>
+          <option value="Food Quality">Food Quality</option>
+          <option value="Wrong Order">Wrong Order</option>
+          <option value="Other">Other</option>
         </select>
       </div>
 

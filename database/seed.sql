@@ -9,7 +9,6 @@ IF OBJECT_ID('dbo.Payments', 'U') IS NOT NULL DROP TABLE dbo.Payments;
 IF OBJECT_ID('dbo.CartItems', 'U') IS NOT NULL DROP TABLE dbo.CartItems;
 IF OBJECT_ID('dbo.MenuItemLikes', 'U') IS NOT NULL DROP TABLE dbo.MenuItemLikes;
 IF OBJECT_ID('dbo.Orders', 'U') IS NOT NULL DROP TABLE dbo.Orders;
-IF OBJECT_ID('dbo.Complaints', 'U') IS NOT NULL DROP TABLE dbo.Complaints;
 IF OBJECT_ID('dbo.Feedback', 'U') IS NOT NULL DROP TABLE dbo.Feedback;
 IF OBJECT_ID('dbo.Inspections', 'U') IS NOT NULL DROP TABLE dbo.Inspections;
 IF OBJECT_ID('dbo.MenuItems', 'U') IS NOT NULL DROP TABLE dbo.MenuItems;
@@ -135,25 +134,11 @@ CREATE TABLE dbo.Feedback (
     StallId    INT            NOT NULL,
     UserId     INT            NULL,
     Rating     INT            NOT NULL CHECK (Rating BETWEEN 1 AND 5),
+    Category   NVARCHAR(50)   NULL,   -- NULL = general feedback; set = complaint
     Comment    NVARCHAR(1000) NOT NULL,
     CreatedAt  DATETIME       NOT NULL DEFAULT GETDATE(),
     CONSTRAINT FK_Feedback_Stall FOREIGN KEY (StallId) REFERENCES dbo.Stalls(StallId),
     CONSTRAINT FK_Feedback_User  FOREIGN KEY (UserId)  REFERENCES dbo.Users(UserId)
-);
-
--- ============================================================
--- Complaints
--- ============================================================
-CREATE TABLE dbo.Complaints (
-    ComplaintId INT IDENTITY(1,1) PRIMARY KEY,
-    StallId     INT            NOT NULL,
-    UserId      INT            NULL,
-    Category    NVARCHAR(50)   NOT NULL,
-    Description NVARCHAR(1000) NOT NULL,
-    Status      NVARCHAR(10)   NOT NULL DEFAULT 'Open' CHECK (Status IN ('Open', 'Resolved')),
-    CreatedAt   DATETIME       NOT NULL DEFAULT GETDATE(),
-    CONSTRAINT FK_Complaints_Stall FOREIGN KEY (StallId) REFERENCES dbo.Stalls(StallId),
-    CONSTRAINT FK_Complaints_User  FOREIGN KEY (UserId)  REFERENCES dbo.Users(UserId)
 );
 
 -- ============================================================
@@ -171,8 +156,6 @@ CREATE TABLE dbo.Inspections (
     Notes            NVARCHAR(500) NULL,
     CONSTRAINT FK_Inspections_Stall FOREIGN KEY (StallId) REFERENCES dbo.Stalls(StallId)
 );
-
-GO
 
 -- ============================================================
 -- SEED DATA
@@ -246,27 +229,33 @@ INSERT INTO dbo.Inspections (StallId, InspectionDate, Score, Grade, Violations, 
 (3, '2026-06-20', 93, 'A', NULL,                       'Excellent turnaround. All documentation and hygiene on point.');
 
 -- ============================================================
--- SEED: Orders (10–15 across stalls, June–July 2026)
+-- SEED: Orders (15 across stalls)
+-- CreatedAt is RELATIVE to GETDATE() so the analytics date
+-- filters (Today / Last 7 Days / Last 30 Days) always have data
+-- no matter when the seed is run. Each stall gets at least one
+-- order today, one in the last 7 days, and several older ones.
+-- Pattern: CAST(CAST(GETDATE()-N AS DATE) AS DATETIME) + CAST('HH:MM' AS DATETIME)
+--          = N days ago at HH:MM.
 -- ============================================================
 INSERT INTO dbo.Orders (UserId, Subtotal, PackagingFee, DeliveryFee, Total, Status, EstReadyMinutes, CreatedAt) VALUES
 -- Stall 1 — Roti John Express
-(4, 11.50, 0.60, 2.50, 14.60, 'Paid',       20, '2026-06-25T12:30:00'),
-(5, 15.00, 0.60, 2.50, 18.10, 'Completed',  18, '2026-06-28T13:15:00'),
-(4,  9.50, 0.60, 2.50, 12.60, 'Paid',       22, '2026-07-01T11:45:00'),
-(5, 14.50, 0.60, 2.50, 17.60, 'Completed',  15, '2026-07-03T12:00:00'),
-(4, 10.00, 0.60, 2.50, 13.10, 'Paid',       25, '2026-07-06T14:20:00'),
+(4, 11.50, 0.60, 2.50, 14.60, 'Paid',       20, CAST(CAST(GETDATE()-27 AS DATE) AS DATETIME) + CAST('12:30' AS DATETIME)),
+(5, 15.00, 0.60, 2.50, 18.10, 'Completed',  18, CAST(CAST(GETDATE()-20 AS DATE) AS DATETIME) + CAST('13:15' AS DATETIME)),
+(4,  9.50, 0.60, 2.50, 12.60, 'Paid',       22, CAST(CAST(GETDATE()-14 AS DATE) AS DATETIME) + CAST('11:45' AS DATETIME)),
+(5, 14.50, 0.60, 2.50, 17.60, 'Completed',  15, CAST(CAST(GETDATE()-6  AS DATE) AS DATETIME) + CAST('12:00' AS DATETIME)),
+(4, 10.00, 0.60, 2.50, 13.10, 'Paid',       25, CAST(CAST(GETDATE()    AS DATE) AS DATETIME) + CAST('10:20' AS DATETIME)),
 -- Stall 2 — Wok & Roll
-(5, 14.00, 0.60, 2.50, 17.10, 'Completed',  20, '2026-06-22T12:10:00'),
-(4, 10.50, 0.60, 2.50, 13.60, 'Paid',       18, '2026-06-27T13:30:00'),
-(5, 15.00, 0.60, 2.50, 18.10, 'Paid',       22, '2026-07-02T11:50:00'),
-(4, 13.00, 0.60, 2.50, 16.10, 'Completed',  16, '2026-07-05T12:40:00'),
-(5,  7.50, 0.60, 2.50, 10.60, 'Paid',       20, '2026-07-07T13:00:00'),
+(5, 14.00, 0.60, 2.50, 17.10, 'Completed',  20, CAST(CAST(GETDATE()-25 AS DATE) AS DATETIME) + CAST('12:10' AS DATETIME)),
+(4, 10.50, 0.60, 2.50, 13.60, 'Paid',       18, CAST(CAST(GETDATE()-18 AS DATE) AS DATETIME) + CAST('13:30' AS DATETIME)),
+(5, 15.00, 0.60, 2.50, 18.10, 'Paid',       22, CAST(CAST(GETDATE()-10 AS DATE) AS DATETIME) + CAST('11:50' AS DATETIME)),
+(4, 13.00, 0.60, 2.50, 16.10, 'Completed',  16, CAST(CAST(GETDATE()-5  AS DATE) AS DATETIME) + CAST('12:40' AS DATETIME)),
+(5,  7.50, 0.60, 2.50, 10.60, 'Paid',       20, CAST(CAST(GETDATE()    AS DATE) AS DATETIME) + CAST('11:00' AS DATETIME)),
 -- Stall 3 — Spice Garden
-(4, 14.00, 0.60, 2.50, 17.10, 'Completed',  25, '2026-06-24T12:00:00'),
-(5, 17.00, 0.60, 2.50, 20.10, 'Paid',       20, '2026-06-29T13:45:00'),
-(4, 11.50, 0.60, 2.50, 14.60, 'Paid',       22, '2026-07-03T11:30:00'),
-(5, 11.00, 0.60, 2.50, 14.10, 'Completed',  18, '2026-07-06T12:15:00'),
-(4, 14.50, 0.60, 2.50, 17.60, 'Paid',       20, '2026-07-08T12:50:00');
+(4, 14.00, 0.60, 2.50, 17.10, 'Completed',  25, CAST(CAST(GETDATE()-22 AS DATE) AS DATETIME) + CAST('12:00' AS DATETIME)),
+(5, 17.00, 0.60, 2.50, 20.10, 'Paid',       20, CAST(CAST(GETDATE()-15 AS DATE) AS DATETIME) + CAST('13:45' AS DATETIME)),
+(4, 11.50, 0.60, 2.50, 14.60, 'Paid',       22, CAST(CAST(GETDATE()-8  AS DATE) AS DATETIME) + CAST('11:30' AS DATETIME)),
+(5, 11.00, 0.60, 2.50, 14.10, 'Completed',  18, CAST(CAST(GETDATE()-3  AS DATE) AS DATETIME) + CAST('12:15' AS DATETIME)),
+(4, 14.50, 0.60, 2.50, 17.60, 'Paid',       20, CAST(CAST(GETDATE()    AS DATE) AS DATETIME) + CAST('10:50' AS DATETIME));
 
 -- ============================================================
 -- SEED: OrderItems (line items for the orders above)
@@ -318,16 +307,16 @@ INSERT INTO dbo.OrderItems (OrderId, MenuItemId, StallId, ItemName, UnitPrice, Q
 -- ============================================================
 -- SEED: Feedback (ratings across months for trend chart)
 -- ============================================================
-INSERT INTO dbo.Feedback (StallId, UserId, Rating, Comment, CreatedAt) VALUES
+INSERT INTO dbo.Feedback (StallId, UserId, Rating, Category, Comment, CreatedAt) VALUES
 -- Stall 1 — Roti John Express
-(1, 4, 4, 'Roti John was crispy and flavourful. Will order again!',    '2026-04-10T14:00:00'),
-(1, 5, 5, 'Best cheese roti john on campus. Quick delivery too.',      '2026-05-18T12:30:00'),
-(1, 4, 4, 'Consistently good. Teh tarik could be a bit sweeter.',      '2026-06-22T13:00:00'),
+(1, 4, 4, NULL, 'Roti John was crispy and flavourful. Will order again!',    '2026-04-10T14:00:00'),
+(1, 5, 5, NULL, 'Best cheese roti john on campus. Quick delivery too.',      '2026-05-18T12:30:00'),
+(1, 4, 4, NULL, 'Consistently good. Teh tarik could be a bit sweeter.',      '2026-06-22T13:00:00'),
 -- Stall 2 — Wok & Roll
-(2, 5, 3, 'Char kway teow was a bit oily. Decent portion though.',     '2026-04-15T12:00:00'),
-(2, 4, 4, 'Hokkien mee was tasty and well-packed. Good value.',        '2026-05-22T13:30:00'),
-(2, 5, 5, 'Massive improvement! Wonton noodles were excellent.',       '2026-06-28T14:00:00'),
+(2, 5, 3, 'Service',     'Char kway teow was a bit oily. Decent portion though.',     '2026-04-15T12:00:00'),
+(2, 4, 4, NULL,          'Hokkien mee was tasty and well-packed. Good value.',        '2026-05-22T13:30:00'),
+(2, 5, 5, NULL,          'Massive improvement! Wonton noodles were excellent.',       '2026-06-28T14:00:00'),
 -- Stall 3 — Spice Garden
-(3, 4, 4, 'Butter chicken was creamy and rich. Naan was perfect.',      '2026-04-08T12:00:00'),
-(3, 5, 3, 'Biryani was a bit dry. Portion size could be bigger.',       '2026-05-15T13:00:00'),
-(3, 4, 5, 'Best Indian food on campus! Mango lassi is a must-try.',     '2026-06-20T12:30:00');
+(3, 4, 4, NULL,          'Butter chicken was creamy and rich. Naan was perfect.',      '2026-04-08T12:00:00'),
+(3, 5, 3, 'Food Quality','Biryani was a bit dry. Portion size could be bigger.',       '2026-05-15T13:00:00'),
+(3, 4, 5, NULL,          'Best Indian food on campus! Mango lassi is a must-try.',     '2026-06-20T12:30:00');

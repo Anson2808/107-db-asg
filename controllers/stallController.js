@@ -29,7 +29,7 @@ exports.getMyStall = async (req, res, next) => {
 exports.getStallReviews = async (req, res, next) => {
   try {
     const stallId = Number(req.params.id);
-    const sort = req.query.sort === "highest" ? "highest" : "newest";
+    const sort = ["highest", "lowest"].includes(req.query.sort) ? req.query.sort : "newest";
 
     const [summary, reviews] = await Promise.all([
       getReviewSummaryByStallId(stallId),

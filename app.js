@@ -40,7 +40,6 @@ const {
   addToCartSchema,
   updateCartQuantitySchema,
   feedbackSchema,
-  complaintSchema,
   updateProfileSchema,
   createInspectionSchema,
 } = require("./middlewares/validateMiddleware");
@@ -86,10 +85,6 @@ app.get("/api/inspections/stall/:stallId", verifyJWT, requireRole("inspector"), 
 // Feedback routes (customer only)
 const feedbackController = require("./controllers/feedbackController");
 app.post("/api/feedback", verifyJWT, requireRole("customer"), validate(feedbackSchema), feedbackController.submitFeedback);
-
-// Complaint routes (customer only)
-const complaintController = require("./controllers/complaintController");
-app.post("/api/complaints", verifyJWT, requireRole("customer"), validate(complaintSchema), complaintController.submitComplaint);
 
 // Order routes (any logged-in user)
 const orderController = require("./controllers/orderController");

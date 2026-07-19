@@ -35,43 +35,30 @@
   <div class="card" style="margin-top: 24px;">
     <div class="card-header">
       <h2 class="card-title">Customer Satisfaction</h2>
-      <p class="card-subtitle">Recent feedback and formal complaints submitted by customers.</p>
+      <p class="card-subtitle">Recent feedback and complaints submitted by customers.</p>
     </div>
 
-    <div class="chart-grid">
-      <!-- Feedback Table -->
-      <div class="table-wrapper">
-        <h3 class="table-title">Recent Feedback</h3>
-        <table class="styled-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Customer</th>
-              <th>Rating</th>
-              <th>Comment</th>
-            </tr>
-          </thead>
-          <tbody id="feedbackTableBody"></tbody>
-        </table>
-        <p id="noFeedback" class="empty-state">No feedback yet.</p>
-      </div>
+    <select id="feedbackSortFilter" class="form-select" style="max-width:200px; margin-bottom:16px">
+      <option value="newest" selected>Newest first</option>
+      <option value="lowest">Lowest rating first</option>
+      <option value="highest">Highest rating first</option>
+    </select>
 
-      <!-- Complaints Table -->
-      <div class="table-wrapper">
-        <h3 class="table-title">Formal Complaints</h3>
-        <table class="styled-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Customer</th>
-              <th>Category</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody id="complaintTableBody"></tbody>
-        </table>
-        <p id="noComplaints" class="empty-state">No complaints filed.</p>
-      </div>
+    <div class="table-wrapper">
+      <h3 class="table-title">Customer Feedback</h3>
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Rating</th>
+            <th>Category</th>
+            <th>Comment</th>
+          </tr>
+        </thead>
+        <tbody id="feedbackTableBody"></tbody>
+      </table>
+      <p id="noFeedback" class="empty-state">No feedback yet.</p>
     </div>
   </div>
     <select id="dateRangeFilter" class="form-select" style="margin-bottom: 24px; max-width: 200px;">

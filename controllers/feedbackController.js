@@ -3,7 +3,7 @@ const { getStallById } = require("../models/stallModel");
 
 exports.submitFeedback = async (req, res, next) => {
   try {
-    const { stallId, rating, comment } = req.body;
+    const { stallId, rating, comment, category } = req.body;
 
     const stall = await getStallById(stallId);
     if (!stall) {
@@ -15,6 +15,7 @@ exports.submitFeedback = async (req, res, next) => {
       userId: req.user.userId,
       rating,
       comment: comment.trim(),
+      category,
     });
 
     const feedback = await getFeedbackById(feedbackId);

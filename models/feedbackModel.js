@@ -1,10 +1,10 @@
 const { sql } = require("../database/dbConfig");
 
-async function createFeedback({ stallId, userId, rating, comment }) {
+async function createFeedback({ stallId, userId, rating, comment, category }) {
   const result = await sql.query`
-    INSERT INTO Feedback (StallId, UserId, Rating, Comment)
+    INSERT INTO Feedback (StallId, UserId, Rating, Comment, Category)
     OUTPUT INSERTED.FeedbackId
-    VALUES (${stallId}, ${userId}, ${rating}, ${comment})
+    VALUES (${stallId}, ${userId}, ${rating}, ${comment}, ${category || null})
   `;
 
   return result.recordset[0].FeedbackId;
@@ -13,7 +13,7 @@ async function createFeedback({ stallId, userId, rating, comment }) {
 async function getFeedbackById(feedbackId) {
   const result = await sql.query`
     SELECT
-      f.FeedbackId, f.StallId, f.UserId, f.Rating, f.Comment, f.CreatedAt,
+      f.FeedbackId, f.StallId, f.UserId, f.Rating, f.Category, f.Comment, f.CreatedAt,
       s.StallName, s.CuisineType
     FROM Feedback f
     JOIN Stalls s ON f.StallId = s.StallId
@@ -24,14 +24,19 @@ async function getFeedbackById(feedbackId) {
 }
 
 async function getReviewsByStallId(stallId, sort = "newest") {
-  const orderBy = sort === "highest" ? "f.Rating DESC, f.CreatedAt DESC" : "f.CreatedAt DESC";
+  const orderClauses = {
+    highest: "f.Rating DESC, f.CreatedAt DESC",
+    lowest:  "f.Rating ASC, f.CreatedAt DESC",
+    newest:  "f.CreatedAt DESC"
+  };
+  const orderBy = orderClauses[sort] || orderClauses.newest;
   const request = new sql.Request();
 
   request.input("stallId", sql.Int, stallId);
 
   const result = await request.query(`
     SELECT
-      f.FeedbackId, f.StallId, f.UserId, f.Rating, f.Comment, f.CreatedAt,
+      f.FeedbackId, f.StallId, f.UserId, f.Rating, f.Category, f.Comment, f.CreatedAt,
       u.Username
     FROM Feedback f
     LEFT JOIN Users u ON f.UserId = u.UserId
