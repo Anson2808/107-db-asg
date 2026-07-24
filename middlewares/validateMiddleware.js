@@ -46,12 +46,15 @@ const updateStallSchema = Joi.object({
   status: Joi.string().valid("open", "closed").optional(),
 }).min(1);
 
+// Menu item stock status — must match the CHECK constraint on MenuItems.Availability
+const AVAILABILITY_VALUES = ["available", "lowStock", "soldOut"];
+
 // Create menu item schema
 const createMenuItemSchema = Joi.object({
   name: Joi.string().required(),
   price: Joi.number().greater(0).required(),
   description: Joi.string().allow("").optional(),
-  isAvailable: Joi.boolean().default(true).optional(),
+  availability: Joi.string().valid(...AVAILABILITY_VALUES).default("available").optional(),
   imageUrl: Joi.string().max(255).allow("").optional(),
 });
 
@@ -60,7 +63,7 @@ const updateMenuItemSchema = Joi.object({
   name: Joi.string().optional(),
   price: Joi.number().greater(0).optional(),
   description: Joi.string().allow("").optional(),
-  isAvailable: Joi.boolean().optional(),
+  availability: Joi.string().valid(...AVAILABILITY_VALUES).optional(),
   imageUrl: Joi.string().max(255).allow("").optional(),
 }).min(1);
 

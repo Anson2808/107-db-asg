@@ -4,7 +4,7 @@ async function getAllMenuItems() {
   const result = await sql.query`
     SELECT
       m.MenuItemId, m.StallId, m.Name, m.Description,
-      m.Price, m.IsAvailable, m.LikeCount, m.ImageUrl,
+      m.Price, m.Availability, m.IsAvailable, m.LikeCount, m.ImageUrl,
       s.StallName, s.CuisineType
     FROM MenuItems m
     JOIN Stalls s ON m.StallId = s.StallId
@@ -21,11 +21,11 @@ async function getMenuByStallId(stallId) {
   return result.recordset;
 }
 
-async function createMenuItem({ stallId, name, description, price, isAvailable, imageUrl }) {
+async function createMenuItem({ stallId, name, description, price, availability, imageUrl }) {
   const result = await sql.query`
-    INSERT INTO MenuItems (StallId, Name, Description, Price, IsAvailable, ImageUrl)
+    INSERT INTO MenuItems (StallId, Name, Description, Price, Availability, ImageUrl)
     OUTPUT INSERTED.MenuItemId
-    VALUES (${stallId}, ${name}, ${description || null}, ${price}, ${isAvailable !== false ? 1 : 0}, ${imageUrl || null})
+    VALUES (${stallId}, ${name}, ${description || null}, ${price}, ${availability || "available"}, ${imageUrl || null})
   `;
   return result.recordset[0].MenuItemId;
 }
@@ -83,11 +83,13 @@ async function likeMenuItem({ menuItemId, userId }) {
 }
 
 async function updateMenuItem(menuItemId, fields) {
+  // IsAvailable is a computed column — it is derived from Availability
+  // by the database and must never be written to directly.
   const typeMap = {
     Name: sql.NVarChar,
     Description: sql.NVarChar,
     Price: sql.Decimal(10, 2),
-    IsAvailable: sql.Bit,
+    Availability: sql.NVarChar,
     ImageUrl: sql.NVarChar,
   };
 

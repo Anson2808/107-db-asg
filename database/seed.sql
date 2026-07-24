@@ -57,15 +57,21 @@ CREATE TABLE dbo.CustomerFavoriteStalls (
 -- ============================================================
 -- MenuItems
 -- ============================================================
+-- Availability is the single source of truth for stock status.
+-- IsAvailable is DERIVED from it (computed column) so every existing
+-- "can this be ordered?" check keeps working unchanged: only 'soldOut'
+-- blocks ordering, 'lowStock' items can still be bought.
 CREATE TABLE dbo.MenuItems (
-    MenuItemId  INT IDENTITY(1,1) PRIMARY KEY,
-    StallId     INT            NOT NULL,
-    Name        NVARCHAR(100)  NOT NULL,
-    Description NVARCHAR(500)  NULL,
-    Price       DECIMAL(10,2)  NOT NULL,
-    IsAvailable BIT            NOT NULL DEFAULT 1,
-    LikeCount   INT            NOT NULL DEFAULT 0,
-    ImageUrl    NVARCHAR(255)  NULL,
+    MenuItemId   INT IDENTITY(1,1) PRIMARY KEY,
+    StallId      INT            NOT NULL,
+    Name         NVARCHAR(100)  NOT NULL,
+    Description  NVARCHAR(500)  NULL,
+    Price        DECIMAL(10,2)  NOT NULL,
+    Availability NVARCHAR(20)   NOT NULL DEFAULT 'available'
+                 CHECK (Availability IN ('available', 'lowStock', 'soldOut')),
+    IsAvailable  AS (CASE WHEN Availability = 'soldOut' THEN CAST(0 AS BIT) ELSE CAST(1 AS BIT) END) PERSISTED,
+    LikeCount    INT            NOT NULL DEFAULT 0,
+    ImageUrl     NVARCHAR(255)  NULL,
     CONSTRAINT FK_MenuItems_Stall FOREIGN KEY (StallId) REFERENCES dbo.Stalls(StallId)
 );
 
@@ -190,31 +196,33 @@ INSERT INTO dbo.Stalls (OwnerId, StallName, Description, CuisineType, Status) VA
 (3, 'Spice Garden',      'Home-style Indian curries, biryanis, and tandoori delights.',             'Indian', 'open');
 
 -- Menu Items — Roti John Express (Stall 1)
-INSERT INTO dbo.MenuItems (StallId, Name, Description, Price, IsAvailable, LikeCount, ImageUrl) VALUES
-(1, 'Classic Roti John',        'Toasted baguette with minced mutton, egg, and special sauce',          6.50, 1, 24, '/menu_image/rotijohnclassic.jpg'),
-(1, 'Chicken Roti John',        'Crispy baguette layered with spiced chicken and onion-egg scramble',    6.00, 1, 18, '/menu_image/chickenrotijohn.jpeg'),
-(1, 'Cheese Roti John',         'The classic with a generous blanket of melted cheddar',                 7.50, 1, 31, '/menu_image/cheeserotijohn.jpeg'),
-(1, 'Mutton Kebab Wrap',        'Grilled spiced mutton skewers wrapped in flatbread with mint chutney',  8.00, 1, 15, '/menu_image/muttonkebabwrap.jpg'),
-(1, 'Curry Puff (2 pcs)',       'Flaky pastry filled with curried potato and chicken',                   3.50, 1, 12, '/menu_image/currypuff.jpg'),
-(1, 'Teh Tarik',                'Frothy pulled milk tea — hot or iced',                                  2.50, 1, 9,  '/menu_image/tehtarik.jpg');
+-- Availability: 'available' | 'lowStock' | 'soldOut' (a few of each so the
+-- browse page and owner dashboard show all three states out of the box).
+INSERT INTO dbo.MenuItems (StallId, Name, Description, Price, Availability, LikeCount, ImageUrl) VALUES
+(1, 'Classic Roti John',        'Toasted baguette with minced mutton, egg, and special sauce',          6.50, 'available', 24, '/menu_image/rotijohnclassic.jpg'),
+(1, 'Chicken Roti John',        'Crispy baguette layered with spiced chicken and onion-egg scramble',    6.00, 'available', 18, '/menu_image/chickenrotijohn.jpeg'),
+(1, 'Cheese Roti John',         'The classic with a generous blanket of melted cheddar',                 7.50, 'lowStock',  31, '/menu_image/cheeserotijohn.jpeg'),
+(1, 'Mutton Kebab Wrap',        'Grilled spiced mutton skewers wrapped in flatbread with mint chutney',  8.00, 'available', 15, '/menu_image/muttonkebabwrap.jpg'),
+(1, 'Curry Puff (2 pcs)',       'Flaky pastry filled with curried potato and chicken',                   3.50, 'soldOut',   12, '/menu_image/currypuff.jpg'),
+(1, 'Teh Tarik',                'Frothy pulled milk tea — hot or iced',                                  2.50, 'available',  9, '/menu_image/tehtarik.jpg');
 
 -- Menu Items — Wok & Roll (Stall 2)
-INSERT INTO dbo.MenuItems (StallId, Name, Description, Price, IsAvailable, LikeCount, ImageUrl) VALUES
-(2, 'Char Kway Teow',           'Flat rice noodles wok-fried with prawns, cockles, and dark soy',        7.00, 1, 42, '/menu_image/charkwayteow.jpg'),
-(2, 'Hokkien Mee',              'Thick yellow noodles braised in rich prawn broth with pork belly',       7.50, 1, 35, '/menu_image/hokkienmee.jpg'),
-(2, 'Sweet & Sour Chicken Rice', 'Crispy battered chicken in tangy sauce over steamed jasmine rice',      6.50, 1, 20, '/menu_image/sweetandsourchickenrice.jpg'),
-(2, 'Wonton Noodle Soup',       'Springy egg noodles in clear broth with handmade prawn wontons',         6.00, 1, 28, '/menu_image/wontonnoodlesoup.jpg'),
-(2, 'Spring Rolls (4 pcs)',     'Crispy vegetable spring rolls with sweet chilli dip',                    3.00, 1, 16, '/menu_image/springroll.jpg'),
-(2, 'Iced Lemon Tea',           'Freshly brewed Ceylon tea with lemon and a hint of honey',               2.00, 1, 11, '/menu_image/icelemontea.jpg');
+INSERT INTO dbo.MenuItems (StallId, Name, Description, Price, Availability, LikeCount, ImageUrl) VALUES
+(2, 'Char Kway Teow',           'Flat rice noodles wok-fried with prawns, cockles, and dark soy',        7.00, 'available', 42, '/menu_image/charkwayteow.jpg'),
+(2, 'Hokkien Mee',              'Thick yellow noodles braised in rich prawn broth with pork belly',       7.50, 'lowStock',  35, '/menu_image/hokkienmee.jpg'),
+(2, 'Sweet & Sour Chicken Rice', 'Crispy battered chicken in tangy sauce over steamed jasmine rice',      6.50, 'available', 20, '/menu_image/sweetandsourchickenrice.jpg'),
+(2, 'Wonton Noodle Soup',       'Springy egg noodles in clear broth with handmade prawn wontons',         6.00, 'available', 28, '/menu_image/wontonnoodlesoup.jpg'),
+(2, 'Spring Rolls (4 pcs)',     'Crispy vegetable spring rolls with sweet chilli dip',                    3.00, 'available', 16, '/menu_image/springroll.jpg'),
+(2, 'Iced Lemon Tea',           'Freshly brewed Ceylon tea with lemon and a hint of honey',               2.00, 'available', 11, '/menu_image/icelemontea.jpg');
 
 -- Menu Items — Spice Garden (Stall 3)
-INSERT INTO dbo.MenuItems (StallId, Name, Description, Price, IsAvailable, LikeCount, ImageUrl) VALUES
-(3, 'Chicken Biryani',          'Fragrant basmati rice layered with marinated chicken and saffron',       9.00, 1, 38, '/menu_image/chickenbiryani.jpg'),
-(3, 'Butter Chicken',           'Tandoori chicken simmered in creamy tomato-butter gravy',                8.50, 1, 45, '/menu_image/butterchicken.jpg'),
-(3, 'Garlic Naan',              'Soft leavened flatbread brushed with garlic butter',                     2.50, 1, 22, '/menu_image/garlicnaan.jpg'),
-(3, 'Vegetable Samosa (3 pcs)', 'Crispy triangular pastry stuffed with spiced potato and green peas',     4.00, 1, 19, '/menu_image/vegetablesamosa.jpg'),
-(3, 'Mango Lassi',              'Creamy yogurt drink blended with Alphonso mango pulp',                   3.50, 1, 27, '/menu_image/mangolassi.jpg'),
-(3, 'Masala Chai',             'Spiced Indian milk tea brewed with cardamom, ginger, and cloves',         2.00, 1, 14, '/menu_image/masalachai.jpg');
+INSERT INTO dbo.MenuItems (StallId, Name, Description, Price, Availability, LikeCount, ImageUrl) VALUES
+(3, 'Chicken Biryani',          'Fragrant basmati rice layered with marinated chicken and saffron',       9.00, 'available', 38, '/menu_image/chickenbiryani.jpg'),
+(3, 'Butter Chicken',           'Tandoori chicken simmered in creamy tomato-butter gravy',                8.50, 'available', 45, '/menu_image/butterchicken.jpg'),
+(3, 'Garlic Naan',              'Soft leavened flatbread brushed with garlic butter',                     2.50, 'available', 22, '/menu_image/garlicnaan.jpg'),
+(3, 'Vegetable Samosa (3 pcs)', 'Crispy triangular pastry stuffed with spiced potato and green peas',     4.00, 'soldOut',   19, '/menu_image/vegetablesamosa.jpg'),
+(3, 'Mango Lassi',              'Creamy yogurt drink blended with Alphonso mango pulp',                   3.50, 'available', 27, '/menu_image/mangolassi.jpg'),
+(3, 'Masala Chai',             'Spiced Indian milk tea brewed with cardamom, ginger, and cloves',         2.00, 'lowStock',  14, '/menu_image/masalachai.jpg');
 
 -- Customer favourite stalls
 INSERT INTO dbo.CustomerFavoriteStalls (UserId, StallId) VALUES

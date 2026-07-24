@@ -93,10 +93,11 @@
               <input type="number" id="addPrice" class="form-input" step="0.01" min="0.01" required>
             </div>
             <div class="form-group">
-              <label for="addAvailable" class="form-label">Available</label>
+              <label for="addAvailable" class="form-label">Availability</label>
               <select id="addAvailable" class="form-select">
-                <option value="true">Yes</option>
-                <option value="false">No</option>
+                <option value="available">Available</option>
+                <option value="lowStock">Low stock</option>
+                <option value="soldOut">Sold out</option>
               </select>
             </div>
           </div>
@@ -123,7 +124,7 @@
               <th>Name</th>
               <th>Description</th>
               <th>Price</th>
-              <th>Available</th>
+              <th>Availability</th>
               <th>Likes</th>
               <th>Actions</th>
             </tr>

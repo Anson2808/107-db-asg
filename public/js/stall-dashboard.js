@@ -86,6 +86,28 @@ function renderStall(stall, menu) {
   renderMenuTable(menu);
 }
 
+// ============================================================
+//   AVAILABILITY HELPERS
+//   Values must match the CHECK constraint on MenuItems.Availability.
+// ============================================================
+const AVAILABILITY_OPTIONS = [
+  { value: "available", label: "Available", badgeClass: "badge-available" },
+  { value: "lowStock", label: "Low stock", badgeClass: "badge-lowstock" },
+  { value: "soldOut", label: "Sold out", badgeClass: "badge-unavailable" },
+];
+
+function availabilityBadgeHtml(availability) {
+  const option = AVAILABILITY_OPTIONS.find((o) => o.value === availability) || AVAILABILITY_OPTIONS[0];
+  return `<span class="badge ${option.badgeClass}">${option.label}</span>`;
+}
+
+function availabilityOptionsHtml(selected) {
+  const current = AVAILABILITY_OPTIONS.some((o) => o.value === selected) ? selected : "available";
+  return AVAILABILITY_OPTIONS
+    .map((o) => `<option value="${o.value}"${o.value === current ? " selected" : ""}>${o.label}</option>`)
+    .join("");
+}
+
 function renderMenuTable(menu) {
   const tbody = document.getElementById("menuTableBody");
   const noItems = document.getElementById("noMenuItems");
@@ -100,7 +122,7 @@ function renderMenuTable(menu) {
         <td><strong>${escapeHtml(item.Name)}</strong></td>
         <td>${escapeHtml(item.Description || "\u2014")}</td>
         <td>$${Number(item.Price).toFixed(2)}</td>
-        <td>${item.IsAvailable ? '<span class="badge badge-available">Available</span>' : '<span class="badge badge-unavailable">Unavailable</span>'}</td>
+        <td>${availabilityBadgeHtml(item.Availability)}</td>
         <td>${item.LikeCount}</td>
         <td>
           <button class="btn btn-outline btn-sm edit-item-btn" data-id="${item.MenuItemId}">Edit</button>
@@ -126,10 +148,9 @@ function renderMenuTable(menu) {
               <textarea class="form-textarea edit-description">${escapeHtml(item.Description || "")}</textarea>
             </div>
             <div class="form-group">
-              <label class="form-label">Available</label>
+              <label class="form-label">Availability</label>
               <select class="form-select edit-available">
-                <option value="true" ${item.IsAvailable ? "selected" : ""}>Yes</option>
-                <option value="false" ${item.IsAvailable ? "" : "selected"}>No</option>
+                ${availabilityOptionsHtml(item.Availability)}
               </select>
             </div>
             <div class="form-group">
@@ -206,7 +227,7 @@ async function handleMenuAction(e) {
     const name = form.querySelector(".edit-name").value.trim();
     const price = parseFloat(form.querySelector(".edit-price").value);
     const description = form.querySelector(".edit-description").value.trim();
-    const isAvailable = form.querySelector(".edit-available").value === "true";
+    const availability = form.querySelector(".edit-available").value;
     const imageUrl = form.querySelector(".edit-imageUrl").value.trim();
 
     errorEl.style.display = "none";
@@ -216,7 +237,7 @@ async function handleMenuAction(e) {
     try {
       await api(`/menu/${id2}`, {
         method: "PUT",
-        body: JSON.stringify({ name, price, description, isAvailable, imageUrl }),
+        body: JSON.stringify({ name, price, description, availability, imageUrl }),
       });
       showToast("Menu item updated.", "success");
       await loadDashboard();
@@ -260,7 +281,7 @@ async function handleAddItem(e) {
     name: document.getElementById("addName").value.trim(),
     price: parseFloat(document.getElementById("addPrice").value),
     description: document.getElementById("addDescription").value.trim(),
-    isAvailable: document.getElementById("addAvailable").value === "true",
+    availability: document.getElementById("addAvailable").value,
     imageUrl: document.getElementById("addImageUrl").value.trim(),
   };
 

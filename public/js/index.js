@@ -159,8 +159,21 @@ function buildReviewsPanel(stallId) {
   `;
 }
 
+/**
+ * Maps MenuItems.Availability to its badge class + label.
+ * Falls back to the legacy IsAvailable flag if Availability is missing.
+ */
+function availabilityBadge(item) {
+  const status = item.Availability || (item.IsAvailable ? 'available' : 'soldOut');
+
+  if (status === 'soldOut') return { status, className: 'badge-unavailable', label: t('soldOut') };
+  if (status === 'lowStock') return { status, className: 'badge-lowstock', label: t('lowStock') };
+  return { status, className: 'badge-available', label: t('available') };
+}
+
 function buildItemCard(item) {
-  const isAvail = !!item.IsAvailable;
+  const badge = availabilityBadge(item);
+  const isAvail = badge.status !== 'soldOut';
   const price = Number(item.Price).toFixed(2);
 
   return `
@@ -169,8 +182,8 @@ function buildItemCard(item) {
       <div class="menu-card-body">
         <div class="menu-card-header">
           <h3 class="menu-card-name">${escapeHtml(item.Name)}</h3>
-          <span class="badge ${isAvail ? 'badge-available' : 'badge-unavailable'}">
-            ${isAvail ? t('available') : t('unavailable')}
+          <span class="badge ${badge.className}">
+            ${badge.label}
           </span>
         </div>
         ${item.Description ? `<p class="menu-card-desc">${escapeHtml(item.Description)}</p>` : ''}
@@ -198,7 +211,7 @@ function buildItemCard(item) {
             <button type="button" class="qty-btn" disabled>+</button>
           </div>
           <button type="button" class="btn btn-add-cart btn-add-cart--disabled" disabled>
-            ${t('unavailable')}
+            ${t('soldOut')}
           </button>
         `}
       </div>

@@ -24,14 +24,14 @@ exports.addMenuItem = async (req, res, next) => {
       return res.status(404).json({ error: "Stall not found" });
     }
 
-    const { name, description, price, isAvailable, imageUrl } = req.body;
+    const { name, description, price, availability, imageUrl } = req.body;
 
     const menuItemId = await createMenuItem({
       stallId: stall.StallId,
       name,
       description,
       price,
-      isAvailable,
+      availability,
       imageUrl,
     });
 
@@ -77,13 +77,13 @@ exports.updateMenuItem = async (req, res, next) => {
       return res.status(403).json({ error: "Forbidden: you do not own this menu item" });
     }
 
-    const { name, description, price, isAvailable, imageUrl } = req.body;
+    const { name, description, price, availability, imageUrl } = req.body;
 
     const fields = {};
     if (name !== undefined) fields.Name = name;
     if (description !== undefined) fields.Description = description;
     if (price !== undefined) fields.Price = price;
-    if (isAvailable !== undefined) fields.IsAvailable = isAvailable;
+    if (availability !== undefined) fields.Availability = availability;
     if (imageUrl !== undefined) fields.ImageUrl = imageUrl;
 
     await updateMenuItem(item.MenuItemId, fields);
