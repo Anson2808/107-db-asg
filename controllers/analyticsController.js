@@ -17,28 +17,35 @@ exports.getPerformance = async (req, res, next) => {
       return res.status(404).json({ error: "Stall not found" });
     }
 
-    const range = req.query.range || 'monthly';
-    const year = req.query.year ? Number(req.query.year) : null;
-    const month = req.query.month ? Number(req.query.month) : null;
+    let startDate = req.query.startDate;
+    let endDate = req.query.endDate;
 
-    let days = 30; 
-    if (range === 'daily' || range === 'today') days = 1;
-    if (range === 'weekly') days = 7;
-    if (range === 'monthly') days = 30;
-    if (range === 'yearly' || range === 'ytd') days = 365;
+    if (!startDate || !endDate) {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      startDate = `${year}-${month}-01`;
+      endDate = `${year}-${month}-${day}`;
+    }
+
+    const startDateTime = `${startDate} 00:00:00`;
+    const endDateTime = `${endDate} 23:59:59`;
 
     const [orderStats, busiestDay, revenueByDay, popularItems, lowestPerformingItems, peakHours, ratingTrend] = await Promise.all([
-      getOrderStats(stall.StallId, range, days, year, month),
-      getBusiestDay(stall.StallId, range, days, year, month),
-      getRevenueByDay(stall.StallId, range, days, year, month),
-      getPopularItems(stall.StallId, range, days, year, month),
-      getLowestPerformingItems(stall.StallId, range, days, year, month),
-      getPeakHours(stall.StallId, range, days, year, month),
+      getOrderStats(stall.StallId, startDateTime, endDateTime),
+      getBusiestDay(stall.StallId, startDateTime, endDateTime),
+      getRevenueByDay(stall.StallId, startDateTime, endDateTime),
+      getPopularItems(stall.StallId, startDateTime, endDateTime),
+      getLowestPerformingItems(stall.StallId, startDateTime, endDateTime),
+      getPeakHours(stall.StallId, startDateTime, endDateTime),
       getAverageRatingTrend(stall.StallId),
     ]);
 
     res.status(200).json({
       stallName: stall.StallName,
+      startDate,
+      endDate,
       orderStats,
       busiestDay,
       revenueByDay,
@@ -51,6 +58,7 @@ exports.getPerformance = async (req, res, next) => {
     next(err);
   }
 };
+
 exports.getSatisfaction = async (req, res, next) => {
   try {
     const stall = await getStallByOwnerId(req.user.userId);

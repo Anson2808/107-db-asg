@@ -77,36 +77,26 @@
   </div>
 
     <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 24px; flex-wrap: wrap;">
-      <select id="dateRangeFilter" class="form-select" style="max-width: 200px;">
-        <option value="daily">Today</option>
-        <option value="weekly">Weekly</option>
-        <option value="monthly" selected>Monthly</option>
-        <option value="yearly">Yearly</option>
+      <label for="datePresetSelect" style="font-weight: 600; font-size: 14px;">Date Range:</label>
+      <select id="datePresetSelect" class="form-select" style="max-width: 180px;">
+        <option value="thisMonth" selected>This Month</option>
+        <option value="thisWeek">This Week</option>
+        <option value="lastWeek">Last Week</option>
+        <option value="lastMonth">Last Month</option>
+        <option value="custom">Custom Range</option>
       </select>
-      <select id="selectMonthFilter" class="form-select" style="max-width: 150px;">
-        <option value="">All Months</option>
-        <option value="1">January</option>
-        <option value="2">February</option>
-        <option value="3">March</option>
-        <option value="4">April</option>
-        <option value="5">May</option>
-        <option value="6">June</option>
-        <option value="7">July</option>
-        <option value="8">August</option>
-        <option value="9">September</option>
-        <option value="10">October</option>
-        <option value="11">November</option>
-        <option value="12">December</option>
-      </select>
-      <select id="selectYearFilter" class="form-select" style="max-width: 120px;">
-        <option value="">All Years</option>
-        <option value="2026">2026</option>
-        <option value="2025">2025</option>
-      </select>
+
+      <div id="customDateContainer" style="display: none; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <input type="date" id="startDateInput" class="form-select" style="max-width: 150px;">
+        <span style="color: var(--text-secondary);">to</span>
+        <input type="date" id="endDateInput" class="form-select" style="max-width: 150px;">
+        <button id="applyCustomDateBtn" class="btn btn-primary btn-sm">Apply</button>
+      </div>
     </div>
 
     <div class="card">
       <h2 class="card-title" id="revenueChartTitle" style="margin-bottom:16px">Revenue Overview</h2>
+      <p id="weeklyDateSpan" style="font-size:13px; color:var(--text-muted); margin-top: -8px; margin-bottom: 12px; display: none;"></p>
       <div class="chart-wrapper" id="revenueChartWrapper">
         <canvas id="revenueChart"></canvas>
       </div>

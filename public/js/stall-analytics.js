@@ -14,15 +14,30 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  setupInitialDates();
   loadAnalytics();
 
-  // Filter dropdown listeners
-  ["dateRangeFilter", "selectMonthFilter", "selectYearFilter"].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener("change", loadAnalytics);
-  });
+  // Preset dropdown listener
+  const presetSelect = document.getElementById("datePresetSelect");
+  const customContainer = document.getElementById("customDateContainer");
+  if (presetSelect) {
+    presetSelect.addEventListener("change", () => {
+      if (presetSelect.value === "custom") {
+        if (customContainer) customContainer.style.display = "flex";
+      } else {
+        if (customContainer) customContainer.style.display = "none";
+        loadAnalytics();
+      }
+    });
+  }
 
-  // Feedback sort filter — re-renders from cached data, no API call
+  // Custom date Apply button
+  const applyBtn = document.getElementById("applyCustomDateBtn");
+  if (applyBtn) {
+    applyBtn.addEventListener("click", loadAnalytics);
+  }
+
+  // Feedback sort filter
   const sortFilter = document.getElementById("feedbackSortFilter");
   if (sortFilter) {
     sortFilter.addEventListener("change", () => {
@@ -33,23 +48,74 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+function setupInitialDates() {
+  const startInput = document.getElementById("startDateInput");
+  const endInput = document.getElementById("endDateInput");
+  const { startDate, endDate } = getPresetDates("thisMonth");
+  if (startInput && !startInput.value) startInput.value = startDate;
+  if (endInput && !endInput.value) endInput.value = endDate;
+}
+
+function getPresetDates(preset) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const day = now.getDate();
+  const dayOfWeek = now.getDay();
+
+  const formatDate = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  let start = new Date(now);
+  let end = new Date(now);
+
+  if (preset === "thisWeek") {
+    const distanceToMon = (dayOfWeek + 6) % 7;
+    start.setDate(day - distanceToMon);
+    end = new Date(now);
+  } else if (preset === "lastWeek") {
+    const distanceToMon = (dayOfWeek + 6) % 7;
+    start.setDate(day - distanceToMon - 7);
+    end.setDate(day - distanceToMon - 1);
+  } else if (preset === "thisMonth") {
+    start = new Date(year, month, 1);
+    end = new Date(now);
+  } else if (preset === "lastMonth") {
+    start = new Date(year, month - 1, 1);
+    end = new Date(year, month, 0);
+  } else if (preset === "custom") {
+    const sVal = document.getElementById("startDateInput")?.value;
+    const eVal = document.getElementById("endDateInput")?.value;
+    return {
+      startDate: sVal || formatDate(new Date(year, month, 1)),
+      endDate: eVal || formatDate(now)
+    };
+  }
+
+  return {
+    startDate: formatDate(start),
+    endDate: formatDate(end)
+  };
+}
+
 async function loadAnalytics() {
   try {
-    const range = document.getElementById("dateRangeFilter")?.value || 'monthly';
-    const month = document.getElementById("selectMonthFilter")?.value || '';
-    const year = document.getElementById("selectYearFilter")?.value || '';
+    const preset = document.getElementById("datePresetSelect")?.value || "thisMonth";
+    const { startDate, endDate } = getPresetDates(preset);
 
-    let url = `/analytics/performance?range=${range}`;
-    if (month) url += `&month=${month}`;
-    if (year) url += `&year=${year}`;
-    
+    const url = `/analytics/performance?startDate=${startDate}&endDate=${endDate}`;
+
     // Fetch all endpoints concurrently
     const [perfData, hygieneData, satisfactionData] = await Promise.all([
       api(url),
       api("/inspections/history").catch(() => ({ history: [] })),
       api("/analytics/satisfaction").catch(() => ({ feedback: [] }))
     ]);
-    
+
     renderDashboard(perfData);
     renderHygieneSection(hygieneData.history);
     renderSatisfactionSection(satisfactionData);
@@ -94,7 +160,7 @@ function renderDashboard(data) {
   document.getElementById("statAvgRating").textContent = avgRating;
 
   // Chart 1: Revenue
-  renderRevenueChart(data.revenueByDay || []);
+  renderRevenueChart(data.revenueByDay || [], data.startDate, data.endDate);
 
   // Chart 2: Popular Items
   renderPopularItemsChart(data.popularItems || []);
@@ -114,14 +180,17 @@ function renderDashboard(data) {
 // ============================================================
 let revenueChartInstance = null;
 
-function renderRevenueChart(rows) {
-  const range = document.getElementById("dateRangeFilter")?.value || "monthly";
+function renderRevenueChart(rows, startDate, endDate) {
   const titleEl = document.getElementById("revenueChartTitle");
   const wrapper = document.getElementById("revenueChartWrapper");
   const noDataEl = document.getElementById("noRevenueData");
 
   if (titleEl) {
-    titleEl.textContent = (range === "yearly" || range === "ytd") ? "Revenue by Month" : "Revenue by Day";
+    if (startDate && endDate) {
+      titleEl.textContent = `Revenue: ${startDate} to ${endDate}`;
+    } else {
+      titleEl.textContent = "Revenue Overview";
+    }
   }
 
   if (!rows || rows.length === 0) {
@@ -137,17 +206,7 @@ function renderRevenueChart(rows) {
   const ctx = document.getElementById("revenueChart").getContext("2d");
   if (revenueChartInstance) revenueChartInstance.destroy();
 
-  const labels = rows.map((r) => {
-    if (typeof r.date === "string" && r.date.match(/^\d{4}-\d{2}$/)) {
-      const [year, month] = r.date.split("-");
-      const d = new Date(Number(year), Number(month) - 1, 1);
-      return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-    }
-    const d = new Date(r.date);
-    return (range === "yearly" || range === "ytd")
-      ? d.toLocaleDateString("en-US", { month: "short", year: "numeric" })
-      : d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  });
+  const labels = rows.map((r) => r.date);
   const values = rows.map((r) => Number(r.revenue));
 
   revenueChartInstance = new Chart(ctx, {
@@ -161,7 +220,8 @@ function renderRevenueChart(rows) {
         backgroundColor: "rgba(79,70,229,0.08)",
         fill: true,
         tension: 0.3,
-        pointRadius: 4,
+        pointRadius: rows.length === 1 ? 6 : 4,
+        pointHoverRadius: 7,
         pointBackgroundColor: "#4F46E5",
       }],
     },
@@ -352,69 +412,51 @@ function renderRatingTrendChart(rows) {
 }
 
 // ============================================================
-//   HYGIENE SECTION
+//   HYGIENE / INSPECTION SECTION
 // ============================================================
-function renderHygieneSection(history) {
-  const tbody = document.getElementById("hygieneTableBody");
-  const noRecords = document.getElementById("noHygieneRecords");
-
-  if (!history || history.length === 0) {
-    if(noRecords) noRecords.style.display = "block";
-    return;
-  }
-
-  if(tbody) {
-    tbody.innerHTML = history.map(record => {
-      const date = new Date(record.InspectionDate).toLocaleDateString('en-SG');
-      let badgeClass = 'badge-unavailable';
-      if (record.Grade === 'A') badgeClass = 'badge-available';
-      if (record.Grade === 'B') badgeClass = 'badge-open';
-
-      return `
-        <tr>
-          <td>${date}</td>
-          <td><span class="badge ${badgeClass}">Grade ${record.Grade}</span></td>
-          <td><strong>${record.Score}</strong>/100</td>
-        </tr>
-        <tr>
-          <td colspan="3" style="font-size: 12px; color: var(--text-muted); padding-top: 0; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
-            Note: ${record.Violations || 'None'}
-          </td>
-        </tr>
-      `;
-    }).join("");
-  }
-  renderHygieneChart(history);
-}
-
 let hygieneChartInstance = null;
 
+function renderHygieneSection(history) {
+  renderHygieneChart(history || []);
+  renderHygieneTable(history || []);
+}
+
 function renderHygieneChart(history) {
-  const canvas = document.getElementById("hygieneChart");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
+  const ctx = document.getElementById("hygieneChart")?.getContext("2d");
+  if (!ctx) return;
+
   if (hygieneChartInstance) hygieneChartInstance.destroy();
 
-  const labels = history.map(r => {
-    const d = new Date(r.InspectionDate);
-    return `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
-  });
-  const values = history.map(r => r.Score);
+  if (!history || history.length === 0) return;
+
+  const sorted = [...history].sort(
+    (a, b) => new Date(a.InspectionDate) - new Date(b.InspectionDate)
+  );
+
+  const labels = sorted.map((h) =>
+    new Date(h.InspectionDate).toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    })
+  );
+  const scores = sorted.map((h) => h.Score);
 
   hygieneChartInstance = new Chart(ctx, {
     type: "line",
     data: {
       labels,
-      datasets: [{
-        label: "Score",
-        data: values,
-        borderColor: "#10B981", 
-        backgroundColor: "rgba(16, 185, 129, 0.1)",
-        fill: true,
-        tension: 0.3,
-        pointRadius: 4,
-        pointBackgroundColor: "#10B981",
-      }],
+      datasets: [
+        {
+          label: "Inspection Score",
+          data: scores,
+          borderColor: "#10B981",
+          backgroundColor: "rgba(16,185,129,0.08)",
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          pointBackgroundColor: "#10B981",
+        },
+      ],
     },
     options: {
       responsive: true,
@@ -425,102 +467,174 @@ function renderHygieneChart(history) {
   });
 }
 
-// ============================================================
-//   CUSTOMER SATISFACTION SECTION
-// ============================================================
-let satisfactionRows = [];
+function renderHygieneTable(history) {
+  const tbody = document.getElementById("hygieneTableBody");
+  const noRec = document.getElementById("noHygieneRecords");
 
-function renderSatisfactionSection(data) {
-  satisfactionRows = (data && data.feedback) ? data.feedback : [];
-  window._satisfactionRows = satisfactionRows;
-  renderFeedbackTable(satisfactionRows);
-}
+  if (!tbody) return;
 
-function renderFeedbackTable(rows) {
-  const feedbackBody = document.getElementById("feedbackTableBody");
-  const noFeedback = document.getElementById("noFeedback");
-  const sortValue = document.getElementById("feedbackSortFilter")?.value || "newest";
-
-  if (!rows || rows.length === 0) {
-    if (noFeedback) noFeedback.style.display = "block";
-    if (feedbackBody) feedbackBody.innerHTML = "";
+  if (!history || history.length === 0) {
+    tbody.innerHTML = "";
+    if (noRec) noRec.style.display = "block";
     return;
   }
 
-  if (noFeedback) noFeedback.style.display = "none";
+  if (noRec) noRec.style.display = "none";
 
-  const sorted = [...rows].sort((a, b) => {
-    if (sortValue === "lowest") return a.Rating - b.Rating;
-    if (sortValue === "highest") return b.Rating - a.Rating;
-    return new Date(b.CreatedAt) - new Date(a.CreatedAt);
-  });
+  const sorted = [...history].sort(
+    (a, b) => new Date(b.InspectionDate) - new Date(a.InspectionDate)
+  );
 
-  if (feedbackBody) {
-    feedbackBody.innerHTML = sorted.map(f => {
-      const date = new Date(f.CreatedAt).toLocaleDateString("en-SG");
-      const replyHtml = f.OwnerReply
-        ? `<div style="margin-top:8px; padding:8px 12px; background:rgba(79,70,229,0.08); border-left:3px solid #4F46E5; border-radius:4px; font-size:13px;">
-             <strong>Owner Reply:</strong> ${escapeHtml(f.OwnerReply)}
-           </div>`
-        : '';
+  tbody.innerHTML = sorted
+    .map((record) => {
+      const dateStr = new Date(record.InspectionDate).toLocaleDateString(
+        "en-US",
+        { year: "numeric", month: "short", day: "numeric" }
+      );
+      const gradeClass =
+        record.Grade === "A"
+          ? "badge-available"
+          : record.Grade === "B"
+          ? "badge-low-stock"
+          : "badge-closed";
 
       return `
         <tr>
-          <td>${date}</td>
-          <td>${escapeHtml(f.Username)}</td>
-          <td><strong>${f.Rating}</strong>/5</td>
-          <td>${f.Category ? `<span class="badge badge-closed">${escapeHtml(f.Category)}</span>` : "—"}</td>
-          <td>
-            <div>${escapeHtml(f.Comment)}</div>
-            ${replyHtml}
-            <div id="replyBox_${f.FeedbackId}" style="display:none; margin-top:8px;">
-              <textarea id="replyInput_${f.FeedbackId}" class="form-textarea" style="width:100%; min-height:60px; margin-bottom:6px;" placeholder="Write a reply...">${f.OwnerReply ? escapeHtml(f.OwnerReply) : ''}</textarea>
-              <div style="display:flex; gap:6px;">
-                <button class="btn btn-primary btn-sm" onclick="submitOwnerReply(${f.FeedbackId})">Submit Reply</button>
-                <button class="btn btn-outline btn-sm" onclick="toggleReplyBox(${f.FeedbackId})">Cancel</button>
-              </div>
-            </div>
-          </td>
-          <td>
-            <button class="btn btn-outline btn-sm" onclick="toggleReplyBox(${f.FeedbackId})">
-              ${f.OwnerReply ? 'Edit Reply' : 'Reply'}
-            </button>
-          </td>
+          <td>${dateStr}</td>
+          <td>${record.Score}</td>
+          <td><span class="badge ${gradeClass}">${record.Grade}</span></td>
+          <td>${escapeHtml(record.Violations || "None")}</td>
+          <td>${escapeHtml(record.Notes || "-")}</td>
         </tr>
       `;
-    }).join("");
-  }
+    })
+    .join("");
 }
 
-window.toggleReplyBox = function(feedbackId) {
-  const el = document.getElementById(`replyBox_${feedbackId}`);
-  if (el) {
-    el.style.display = el.style.display === "none" ? "block" : "none";
-  }
-};
+// ============================================================
+//   CUSTOMER SATISFACTION SECTION
+// ============================================================
+function renderSatisfactionSection(data) {
+  window._satisfactionRows = data.feedback || [];
+  renderFeedbackTable(window._satisfactionRows);
+}
 
-window.submitOwnerReply = async function(feedbackId) {
-  const input = document.getElementById(`replyInput_${feedbackId}`);
-  const text = input ? input.value.trim() : '';
+function renderFeedbackTable(rows) {
+  const tbody = document.getElementById("feedbackTableBody");
+  const noFb = document.getElementById("noFeedback");
 
-  if (!text) {
-    alert("Reply message cannot be empty.");
+  if (!tbody) return;
+
+  if (!rows || rows.length === 0) {
+    tbody.innerHTML = "";
+    if (noFb) noFb.style.display = "block";
     return;
   }
 
+  if (noFb) noFb.style.display = "none";
+
+  const sortVal = document.getElementById("feedbackSortFilter")?.value || "newest";
+
+  const sorted = [...rows].sort((a, b) => {
+    if (sortVal === "lowest") return a.Rating - b.Rating;
+    if (sortVal === "highest") return b.Rating - a.Rating;
+    return new Date(b.CreatedAt) - new Date(a.CreatedAt);
+  });
+
+  tbody.innerHTML = sorted
+    .map((f) => {
+      const dateStr = new Date(f.CreatedAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+
+      const stars = "★".repeat(f.Rating) + "☆".repeat(5 - f.Rating);
+
+      const hasReply = f.OwnerReply && f.OwnerReply.trim() !== "";
+      let replyHtml = "";
+      if (hasReply) {
+        const replyDate = new Date(f.RepliedAt).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        });
+        replyHtml = `
+          <div class="owner-reply-box" style="margin-top:8px; padding:8px 12px; background:var(--bg-muted); border-left:3px solid var(--primary); border-radius:4px; font-size:13px;">
+            <strong>Owner Response (${replyDate}):</strong> ${escapeHtml(f.OwnerReply)}
+          </div>
+        `;
+      }
+
+      const actionHtml = hasReply
+        ? `<span class="badge badge-available">Replied</span>`
+        : `<button class="btn btn-secondary btn-sm" onclick="toggleReplyForm(${f.FeedbackId})">Reply</button>`;
+
+      return `
+        <tr>
+          <td>${dateStr}</td>
+          <td>${escapeHtml(f.CustomerName || "Anonymous")}</td>
+          <td><span style="color:#F59E0B;">${stars}</span> (${f.Rating})</td>
+          <td>${escapeHtml(f.Category || "General")}</td>
+          <td>
+            <div>${escapeHtml(f.Comment || "No comment provided.")}</div>
+            ${replyHtml}
+            <div id="replyForm_${f.FeedbackId}" class="edit-form" style="margin-top:8px;">
+              <textarea id="replyText_${f.FeedbackId}" class="form-select" style="width:100%; min-height:60px;" placeholder="Write your response to customer..."></textarea>
+              <div style="display:flex; gap:8px; margin-top:6px;">
+                <button class="btn btn-primary btn-sm" onclick="submitOwnerReply(${f.FeedbackId})">Submit Reply</button>
+                <button class="btn btn-secondary btn-sm" onclick="toggleReplyForm(${f.FeedbackId})">Cancel</button>
+              </div>
+            </div>
+          </td>
+          <td>${actionHtml}</td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+function toggleReplyForm(feedbackId) {
+  const form = document.getElementById(`replyForm_${feedbackId}`);
+  if (form) {
+    form.classList.toggle("visible");
+  }
+}
+
+async function submitOwnerReply(feedbackId) {
   try {
+    const textEl = document.getElementById(`replyText_${feedbackId}`);
+    const ownerReply = textEl?.value?.trim();
+
+    if (!ownerReply) {
+      showToast("Please enter a reply before submitting.", "error");
+      return;
+    }
+
     await api(`/feedback/${feedbackId}/reply`, {
       method: "PUT",
-      body: JSON.stringify({ ownerReply: text }),
+      body: JSON.stringify({ ownerReply }),
     });
 
-    const item = window._satisfactionRows.find(f => f.FeedbackId === feedbackId);
-    if (item) {
-      item.OwnerReply = text;
-      item.RepliedAt = new Date().toISOString();
+    showToast("Reply submitted successfully!", "success");
+
+    const row = window._satisfactionRows?.find((r) => r.FeedbackId === feedbackId);
+    if (row) {
+      row.OwnerReply = ownerReply;
+      row.RepliedAt = new Date().toISOString();
     }
-    renderFeedbackTable(window._satisfactionRows);
+
+    renderFeedbackTable(window._satisfactionRows || []);
   } catch (err) {
-    alert("Failed to submit reply: " + err.message);
+    showToast("Failed to submit reply: " + err.message, "error");
   }
-};
+}
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
