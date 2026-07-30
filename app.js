@@ -87,10 +87,11 @@ app.get("/api/inspections/history", verifyJWT, requireRole("stallOwner"), inspec
 app.post("/api/inspections", verifyJWT, requireRole("inspector"), validate(createInspectionSchema), inspectionController.addInspection);
 app.get("/api/inspections/stall/:stallId", verifyJWT, requireRole("inspector"), inspectionController.getStallInspections);
 
-// Feedback routes (customer only)
+// Feedback routes
 const feedbackController = require("./controllers/feedbackController");
 app.get("/api/feedback/my", verifyJWT, requireRole("customer"), feedbackController.getMyFeedback);
 app.post("/api/feedback", verifyJWT, requireRole("customer"), validate(feedbackSchema), feedbackController.submitFeedback);
+app.put("/api/feedback/:feedbackId/reply", verifyJWT, requireRole("stallOwner"), feedbackController.replyToFeedback);
 app.put("/api/feedback/:feedbackId", verifyJWT, requireRole("customer"), validate(updateFeedbackSchema), feedbackController.updateMyFeedback);
 app.delete("/api/feedback/:feedbackId", verifyJWT, requireRole("customer"), feedbackController.deleteMyFeedback);
 
@@ -106,9 +107,10 @@ app.get("/api/cart", verifyJWT, cartController.getCart);
 app.put("/api/cart/:cartItemId", verifyJWT, validate(updateCartQuantitySchema), cartController.updateCartItem);
 app.delete("/api/cart/:cartItemId", verifyJWT, cartController.removeFromCart);
 
-// User profile routes (any logged-in user)
+// User profile routes
 const userController = require("./controllers/userController");
 app.get("/api/users/me", verifyJWT, userController.getMyProfile);
+app.get("/api/users/me/stats", verifyJWT, requireRole("customer"), userController.getMyStats);
 app.put("/api/users/me", verifyJWT, validate(updateProfileSchema), userController.updateMyProfile);
 
 // ==========================================

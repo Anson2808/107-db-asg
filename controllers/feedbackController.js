@@ -3,6 +3,7 @@ const {
   getFeedbackById,
   getFeedbackByUserId,
   updateFeedback,
+  replyToFeedback,
   deleteFeedback,
 } = require("../models/feedbackModel");
 const { getStallById } = require("../models/stallModel");
@@ -59,6 +60,32 @@ exports.updateMyFeedback = async (req, res, next) => {
 
     const feedback = await getFeedbackById(feedbackId);
     res.status(200).json({ message: "Feedback updated successfully", feedback });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.replyToFeedback = async (req, res, next) => {
+  try {
+    const feedbackId = Number(req.params.feedbackId);
+    const { ownerReply } = req.body;
+
+    if (!ownerReply || !ownerReply.trim()) {
+      return res.status(400).json({ error: "Reply message cannot be empty" });
+    }
+
+    const updated = await replyToFeedback({
+      feedbackId,
+      ownerId: req.user.userId,
+      ownerReply: ownerReply.trim(),
+    });
+
+    if (!updated) {
+      return res.status(403).json({ error: "Feedback not found or you do not own this stall" });
+    }
+
+    const feedback = await getFeedbackById(feedbackId);
+    res.status(200).json({ message: "Reply submitted successfully", feedback });
   } catch (err) {
     next(err);
   }

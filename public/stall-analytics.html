@@ -19,6 +19,10 @@
   <div id="analyticsContent" style="display:none">
     <div class="stall-grid stats-row">
       <div class="stall-stat">
+        <div class="stall-stat-label">Stall Name</div>
+        <div class="stall-stat-value" id="statStallName" style="font-size:18px; word-break:break-word;">—</div>
+      </div>
+      <div class="stall-stat">
         <div class="stall-stat-label">Total Orders</div>
         <div class="stall-stat-value" id="statTotalOrders">0</div>
       </div>
@@ -27,10 +31,19 @@
         <div class="stall-stat-value" id="statTotalRevenue">$0.00</div>
       </div>
       <div class="stall-stat">
+        <div class="stall-stat-label">Avg Order Value (AOV)</div>
+        <div class="stall-stat-value" id="statAov">$0.00</div>
+      </div>
+      <div class="stall-stat">
+        <div class="stall-stat-label">Busiest Day</div>
+        <div class="stall-stat-value" id="statBusiestDay">—</div>
+      </div>
+      <div class="stall-stat">
         <div class="stall-stat-label">Average Rating</div>
         <div class="stall-stat-value" id="statAvgRating">—</div>
       </div>
     </div>
+
   <!-- Customer Satisfaction Dashboard -->
   <div class="card" style="margin-top: 24px;">
     <div class="card-header">
@@ -53,7 +66,8 @@
             <th>Customer</th>
             <th>Rating</th>
             <th>Category</th>
-            <th>Comment</th>
+            <th>Comment & Reply</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody id="feedbackTableBody"></tbody>
@@ -61,32 +75,76 @@
       <p id="noFeedback" class="empty-state">No feedback yet.</p>
     </div>
   </div>
-    <select id="dateRangeFilter" class="form-select" style="margin-bottom: 24px; max-width: 200px;">
-      <option value="daily">Today</option>
-      <option value="weekly">Last 7 Days</option>
-      <option value="monthly" selected>Last 30 Days</option>
-    </select>
+
+    <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 24px; flex-wrap: wrap;">
+      <select id="dateRangeFilter" class="form-select" style="max-width: 200px;">
+        <option value="daily">Today</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly" selected>Monthly</option>
+        <option value="yearly">Yearly</option>
+      </select>
+      <select id="selectMonthFilter" class="form-select" style="max-width: 150px;">
+        <option value="">All Months</option>
+        <option value="1">January</option>
+        <option value="2">February</option>
+        <option value="3">March</option>
+        <option value="4">April</option>
+        <option value="5">May</option>
+        <option value="6">June</option>
+        <option value="7">July</option>
+        <option value="8">August</option>
+        <option value="9">September</option>
+        <option value="10">October</option>
+        <option value="11">November</option>
+        <option value="12">December</option>
+      </select>
+      <select id="selectYearFilter" class="form-select" style="max-width: 120px;">
+        <option value="">All Years</option>
+        <option value="2026">2026</option>
+        <option value="2025">2025</option>
+      </select>
+    </div>
 
     <div class="card">
-      <h2 class="card-title" style="margin-bottom:16px">Revenue by Day</h2>
-      <div class="chart-wrapper">
+      <h2 class="card-title" id="revenueChartTitle" style="margin-bottom:16px">Revenue Overview</h2>
+      <div class="chart-wrapper" id="revenueChartWrapper">
         <canvas id="revenueChart"></canvas>
       </div>
+      <p id="noRevenueData" class="empty-state" style="display:none">No revenue data available for the selected timeframe.</p>
     </div>
 
     <div class="chart-grid">
       <div class="card">
         <h2 class="card-title" style="margin-bottom:16px">Most Popular Items</h2>
-        <div class="chart-wrapper">
+        <div class="chart-wrapper" id="popularItemsWrapper">
           <canvas id="popularItemsChart"></canvas>
         </div>
+        <p id="noPopularItems" class="empty-state" style="display:none">No items ordered during this timeframe.</p>
       </div>    
       <div class="card">
-        <h2 class="card-title" style="margin-bottom:16px">Average Rating Trend</h2>
-        <div class="chart-wrapper">
-          <canvas id="ratingTrendChart"></canvas>
+        <h2 class="card-title" style="margin-bottom:16px">Lowest Performing Items</h2>
+        <div class="table-wrapper" id="lowestItemsWrapper">
+          <table class="styled-table">
+            <thead>
+              <tr>
+                <th>Menu Item</th>
+                <th>Qty Sold</th>
+                <th>Flag</th>
+              </tr>
+            </thead>
+            <tbody id="lowestItemsTableBody"></tbody>
+          </table>
         </div>
+        <p id="noLowestItems" class="empty-state" style="display:none">No menu items recorded.</p>
       </div>
+    </div>
+
+    <div class="card" style="margin-top: 24px;">
+      <h2 class="card-title" style="margin-bottom:16px">Average Rating Trend</h2>
+      <div class="chart-wrapper" id="ratingTrendWrapper">
+        <canvas id="ratingTrendChart"></canvas>
+      </div>
+      <p id="noRatingTrend" class="empty-state" style="display:none">No feedback ratings available yet.</p>
     </div>
 
     <div class="chart-grid" style="margin-top: 24px;">
@@ -100,9 +158,10 @@
 
       <div class="card">
         <h2 class="card-title" style="margin-bottom:16px">Peak Operational Hours</h2>
-        <div class="chart-wrapper">
+        <div class="chart-wrapper" id="peakHoursWrapper">
           <canvas id="peakHoursChart"></canvas>
         </div>
+        <p id="noPeakHours" class="empty-state" style="display:none">No order activity for peak hours.</p>
       </div>
     </div>
 

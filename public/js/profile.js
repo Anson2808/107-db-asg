@@ -23,6 +23,34 @@ async function loadProfile() {
     // Pre-fill form
     document.getElementById("email").value = user.Email || "";
     document.getElementById("fullName").value = user.FullName || "";
+
+    // If customer, load personal stats
+    if (user.Role === "customer") {
+      const card = document.getElementById("customerStatsCard");
+      if (card) card.style.display = "block";
+
+      try {
+        const stats = await api("/users/me/stats");
+        const spentEl = document.getElementById("statTotalSpent");
+        const listEl = document.getElementById("statTopItemsList");
+
+        if (spentEl) spentEl.textContent = "$" + Number(stats.totalSpent || 0).toFixed(2);
+        if (listEl) {
+          if (stats.topItems && stats.topItems.length > 0) {
+            listEl.innerHTML = stats.topItems
+              .map(
+                (item) =>
+                  `<li><strong>${escapeHtml(item.itemName)}</strong> (${item.totalQuantity} ordered)</li>`
+              )
+              .join("");
+          } else {
+            listEl.innerHTML = '<li style="color: var(--text-muted);">No orders yet</li>';
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load customer stats", err);
+      }
+    }
   } catch (err) {
     showProfileMessage(err.message, "error");
   }

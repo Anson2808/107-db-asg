@@ -555,8 +555,12 @@ tr:hover td {
   gap: 16px;
 }
 
+.stats-row {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
 @media (max-width: 600px) {
-  .stall-grid { grid-template-columns: 1fr; }
+  .stall-grid, .stats-row { grid-template-columns: 1fr; }
 }
 
 .stall-stat {

@@ -3,6 +3,7 @@ const {
   getUserById,
   getUserWithHashById,
   updateUser,
+  getCustomerStats,
 } = require("../models/userModel");
 
 exports.getMyProfile = async (req, res, next) => {
@@ -12,6 +13,15 @@ exports.getMyProfile = async (req, res, next) => {
       return res.status(404).json({ error: "User not found" });
     }
     res.status(200).json({ user });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getMyStats = async (req, res, next) => {
+  try {
+    const stats = await getCustomerStats(req.user.userId);
+    res.status(200).json(stats);
   } catch (err) {
     next(err);
   }

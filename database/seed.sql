@@ -155,6 +155,8 @@ CREATE TABLE dbo.Feedback (
     Rating     INT            NOT NULL CHECK (Rating BETWEEN 1 AND 5),
     Category   NVARCHAR(50)   NULL,   -- NULL = general feedback; set = complaint
     Comment    NVARCHAR(1000) NOT NULL,
+    OwnerReply NVARCHAR(1000) NULL,
+    RepliedAt  DATETIME       NULL,
     CreatedAt  DATETIME       NOT NULL DEFAULT GETDATE(),
     CONSTRAINT FK_Feedback_Stall FOREIGN KEY (StallId) REFERENCES dbo.Stalls(StallId),
     CONSTRAINT FK_Feedback_User  FOREIGN KEY (UserId)  REFERENCES dbo.Users(UserId)

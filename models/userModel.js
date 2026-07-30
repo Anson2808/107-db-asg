@@ -54,4 +54,32 @@ async function updateUser(userId, fields) {
   return true;
 }
 
-module.exports = { getUserByUsername, createUser, getUserById, getUserWithHashById, updateUser };
+async function getCustomerStats(userId) {
+  const spentResult = await sql.query`
+    SELECT ISNULL(SUM(Total), 0) AS totalSpent
+    FROM Orders
+    WHERE UserId = ${userId} AND Status IN ('Paid', 'Preparing', 'Ready', 'Completed')
+  `;
+
+  const topItemsResult = await sql.query`
+    SELECT TOP 3
+      oi.ItemName AS itemName,
+      SUM(oi.Quantity) AS totalQuantity
+    FROM OrderItems oi
+    JOIN Orders o ON oi.OrderId = o.OrderId
+    WHERE o.UserId = ${userId} AND o.Status IN ('Paid', 'Preparing', 'Ready', 'Completed')
+    GROUP BY oi.ItemName
+    ORDER BY totalQuantity DESC
+  `;
+
+  return {
+    totalSpent: Number(spentResult.recordset[0]?.totalSpent || 0),
+    topItems: topItemsResult.recordset.map((row) => ({
+      itemName: row.itemName,
+      totalQuantity: Number(row.totalQuantity),
+    })),
+  };
+}
+
+module.exports = { getUserByUsername, createUser, getUserById, getUserWithHashById, updateUser, getCustomerStats };
+

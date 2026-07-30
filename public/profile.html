@@ -18,6 +18,22 @@
 
   <div id="profileMessage" class="alert" style="display:none"></div>
 
+  <section class="card profile-card" id="customerStatsCard" style="display:none">
+    <h2 data-i18n="myStats">My Stats</h2>
+    <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-top: 12px;">
+      <div style="background: var(--surface-secondary, #f3f4f6); padding: 16px; border-radius: 8px; flex: 1; min-width: 180px;">
+        <span style="font-size: 13px; color: var(--text-muted, #6b7280);">Total Spent (All-Time)</span>
+        <div style="font-size: 24px; font-weight: 700; color: var(--primary, #4f46e5); margin-top: 4px;" id="statTotalSpent">$0.00</div>
+      </div>
+      <div style="background: var(--surface-secondary, #f3f4f6); padding: 16px; border-radius: 8px; flex: 2; min-width: 240px;">
+        <span style="font-size: 13px; color: var(--text-muted, #6b7280);">Top 3 Favorite Items</span>
+        <ul id="statTopItemsList" style="margin-top: 8px; padding-left: 20px; font-size: 14px;">
+          <li style="color: var(--text-muted);">No orders yet</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
   <section class="card profile-card">
     <h2 data-i18n="accountInfo">Account Information</h2>
     <div class="profile-info" id="profileInfo">

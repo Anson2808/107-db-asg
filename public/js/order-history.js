@@ -264,6 +264,26 @@ async function loadOrderHistory() {
     try {
       const data = await api('/orders/history');
       allOrders = data.orders || [];
+
+      if (isRole('customer')) {
+        const card = document.getElementById('customerStatsCard');
+        if (card) card.style.display = 'block';
+
+        api('/users/me/stats').then((stats) => {
+          const spentEl = document.getElementById('statTotalSpent');
+          const listEl = document.getElementById('statTopItemsList');
+          if (spentEl) spentEl.textContent = '$' + Number(stats.totalSpent || 0).toFixed(2);
+          if (listEl) {
+            if (stats.topItems && stats.topItems.length > 0) {
+              listEl.innerHTML = stats.topItems
+                .map((item) => `<li><strong>${escapeHtml(item.itemName)}</strong> (${item.totalQuantity} ordered)</li>`)
+                .join('');
+            } else {
+              listEl.innerHTML = '<li style="color: var(--text-muted);">No orders yet</li>';
+            }
+          }
+        }).catch((err) => console.error('Failed to load customer stats', err));
+      }
     } catch (err) {
       if (loadingEl) loadingEl.textContent = 'Failed to load order history: ' + err.message;
       return;

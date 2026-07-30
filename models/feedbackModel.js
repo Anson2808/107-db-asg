@@ -13,7 +13,7 @@ async function createFeedback({ stallId, userId, rating, comment, category }) {
 async function getFeedbackById(feedbackId) {
   const result = await sql.query`
     SELECT
-      f.FeedbackId, f.StallId, f.UserId, f.Rating, f.Category, f.Comment, f.CreatedAt,
+      f.FeedbackId, f.StallId, f.UserId, f.Rating, f.Category, f.Comment, f.OwnerReply, f.RepliedAt, f.CreatedAt,
       s.StallName, s.CuisineType
     FROM Feedback f
     JOIN Stalls s ON f.StallId = s.StallId
@@ -26,7 +26,7 @@ async function getFeedbackById(feedbackId) {
 async function getFeedbackByUserId(userId) {
   const result = await sql.query`
     SELECT
-      f.FeedbackId, f.StallId, f.UserId, f.Rating, f.Category, f.Comment, f.CreatedAt,
+      f.FeedbackId, f.StallId, f.UserId, f.Rating, f.Category, f.Comment, f.OwnerReply, f.RepliedAt, f.CreatedAt,
       s.StallName, s.CuisineType
     FROM Feedback f
     JOIN Stalls s ON f.StallId = s.StallId
@@ -45,11 +45,24 @@ async function updateFeedback({ feedbackId, userId, rating, comment, category })
         Category = ${category || null}
     OUTPUT
       INSERTED.FeedbackId, INSERTED.StallId, INSERTED.UserId,
-      INSERTED.Rating, INSERTED.Category, INSERTED.Comment, INSERTED.CreatedAt
+      INSERTED.Rating, INSERTED.Category, INSERTED.Comment, INSERTED.OwnerReply, INSERTED.RepliedAt, INSERTED.CreatedAt
     WHERE FeedbackId = ${feedbackId} AND UserId = ${userId}
   `;
 
   return result.recordset[0];
+}
+
+async function replyToFeedback({ feedbackId, ownerId, ownerReply }) {
+  const result = await sql.query`
+    UPDATE f
+    SET f.OwnerReply = ${ownerReply},
+        f.RepliedAt = GETDATE()
+    FROM Feedback f
+    JOIN Stalls s ON f.StallId = s.StallId
+    WHERE f.FeedbackId = ${feedbackId} AND s.OwnerId = ${ownerId}
+  `;
+
+  return result.rowsAffected[0] > 0;
 }
 
 async function deleteFeedback({ feedbackId, userId }) {
@@ -74,7 +87,7 @@ async function getReviewsByStallId(stallId, sort = "newest") {
 
   const result = await request.query(`
     SELECT
-      f.FeedbackId, f.StallId, f.UserId, f.Rating, f.Category, f.Comment, f.CreatedAt,
+      f.FeedbackId, f.StallId, f.UserId, f.Rating, f.Category, f.Comment, f.OwnerReply, f.RepliedAt, f.CreatedAt,
       u.Username
     FROM Feedback f
     LEFT JOIN Users u ON f.UserId = u.UserId
@@ -102,6 +115,7 @@ module.exports = {
   getFeedbackById,
   getFeedbackByUserId,
   updateFeedback,
+  replyToFeedback,
   deleteFeedback,
   getReviewsByStallId,
   getReviewSummaryByStallId,

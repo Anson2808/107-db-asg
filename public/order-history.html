@@ -13,6 +13,22 @@
 <div class="page-container">
   <h1 style="font-size:24px; font-weight:700; margin-bottom:16px">Order History</h1>
 
+  <div id="customerStatsCard" class="card" style="display:none; margin-bottom: 20px;">
+    <h2 style="font-size:18px; font-weight:600; margin-bottom:12px">My Stats</h2>
+    <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+      <div style="background: var(--surface-secondary, #f3f4f6); padding: 16px; border-radius: 8px; flex: 1; min-width: 180px;">
+        <span style="font-size: 13px; color: var(--text-muted, #6b7280);">Total Spent (All-Time)</span>
+        <div style="font-size: 24px; font-weight: 700; color: var(--primary, #4f46e5); margin-top: 4px;" id="statTotalSpent">$0.00</div>
+      </div>
+      <div style="background: var(--surface-secondary, #f3f4f6); padding: 16px; border-radius: 8px; flex: 2; min-width: 240px;">
+        <span style="font-size: 13px; color: var(--text-muted, #6b7280);">Top 3 Favorite Items</span>
+        <ul id="statTopItemsList" style="margin-top: 8px; padding-left: 20px; font-size: 14px;">
+          <li style="color: var(--text-muted);">No orders yet</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
   <div id="controlsBar" class="controls-bar" style="display:none">
     <div class="controls-row" id="controlsRow"></div>
   </div>
