@@ -163,9 +163,9 @@ async function getSatisfactionData(stallId) {
       f.OwnerReply,
       f.RepliedAt,
       f.CreatedAt,
-      u.Name AS CustomerName
+      ISNULL(u.FullName, u.Username) AS CustomerName
     FROM Feedback f
-    JOIN Users u ON f.UserId = u.UserId
+    LEFT JOIN Users u ON f.UserId = u.UserId
     WHERE f.StallId = ${stallId}
     ORDER BY f.CreatedAt DESC
   `;
